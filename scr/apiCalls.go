@@ -187,7 +187,7 @@ func getGlobalConfig() (GlobalConfig, error) {
 	return config, nil
 }
 
-func getSchema(subjectName string) ([]Schema, error) {
+func getSchemas(subjectName string) ([]Schema, error) {
 	var allSchemas []Schema
 	client := &http.Client{}
 	url := baseRegistryURL + "/schemas"

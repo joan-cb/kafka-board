@@ -54,7 +54,7 @@ func handleSchema(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schemas, err := getSchema(subjectName)
+	schemas, err := getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -109,7 +109,7 @@ func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get schemas for the subject
-	schemas, err := getSchema(subjectName)
+	schemas, err := getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -95,7 +95,7 @@ func handleErrorResponse(body []byte, statusCode int) (schemaRegistryResponse, e
 		errorResponse.ErrorCode,
 		errorResponse.Message)
 
-	// Ensure message has a value
+	// Ensure message has a non-empty string value
 	if errorResponse.Message == "" {
 		errorResponse.Message = "None"
 	}
