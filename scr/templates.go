@@ -76,7 +76,7 @@ var homeTemplate string = `<!DOCTYPE html>
             height: auto;
             display: block;
             margin: 0 auto;
-            width: 400px;
+            width: 800px;
             margin-bottom: 10px;
         }
 
@@ -121,6 +121,23 @@ var homeTemplate string = `<!DOCTYPE html>
         }
 
         .slack-button img {
+            height: 40px;
+            width: auto;
+        }
+
+        .github-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .github-button:hover {
+            transform: scale(1.05);
+        }
+
+        .github-button img {
             height: 40px;
             width: auto;
         }
@@ -537,6 +554,9 @@ var homeTemplate string = `<!DOCTYPE html>
             <a href="https://slack.com" target="_blank" class="slack-button">
                 <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
             </a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
+                <img src="/static/github.png" class="github-image" alt="GitHub">
+            </a>
         </div>
     </div>
     <div class="search-container">
@@ -793,7 +813,7 @@ var schemaTemplate string = `<!DOCTYPE html>
             height: auto;
             display: block;
             margin: 0 auto;
-            width: 400px;
+            width: 800px;
             margin-bottom: 10px;
         }
 
@@ -818,6 +838,23 @@ var schemaTemplate string = `<!DOCTYPE html>
         }
 
         .slack-button img {
+            height: 40px;
+            width: auto;
+        }
+
+        .github-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .github-button:hover {
+            transform: scale(1.05);
+        }
+
+        .github-button img {
             height: 40px;
             width: auto;
         }
@@ -869,8 +906,8 @@ var schemaTemplate string = `<!DOCTYPE html>
             box-shadow: 0 2px 4px var(--shadow-color);
             text-decoration: none;
             position: absolute;
-            top: 10px;
-            left: 10px;
+            bottom: 10px;
+            left: 50%;
         }
 
         .test-button {
@@ -1014,6 +1051,9 @@ var schemaTemplate string = `<!DOCTYPE html>
             <a href="https://slack.com" target="_blank" class="slack-button">
                 <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
             </a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
+                <img src="/static/github.png" class="github-image" alt="GitHub">
+            </a>
         </div>
         <h1>{{.SubjectName}}</h1>
     </div>
@@ -1123,7 +1163,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             height: auto;
             display: block;
             margin: 0 auto;
-            width: 400px;
+            width: 800px;
             margin-bottom: 10px;
         }
 
@@ -1148,6 +1188,23 @@ var testSchemaTemplate string = `<!DOCTYPE html>
         }
 
         .slack-button img {
+            height: 40px;
+            width: auto;
+        }
+
+        .github-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .github-button:hover {
+            transform: scale(1.05);
+        }
+
+        .github-button img {
             height: 40px;
             width: auto;
         }
@@ -1200,7 +1257,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             text-decoration: none;
             display: inline-block;
             position: absolute;
-            top: 10px;
+            bottom: 10px;
             left: 10px;
         }
 
@@ -1421,6 +1478,9 @@ var testSchemaTemplate string = `<!DOCTYPE html>
         <div class="header-stats">
             <a href="https://slack.com" target="_blank" class="slack-button">
                 <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
+            </a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
+                <img src="/static/github.png" class="github-image" alt="GitHub">
             </a>
         </div>
         <h1>Test Schema Compatibility</h1>

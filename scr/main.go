@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-//go:embed images/header.png images/slack-channel.png images/footer.png images/back.png
+//go:embed images/header.png images/slack-channel.png images/footer.png images/back.png images/github.png
 var staticFiles embed.FS
 
 func main() {
