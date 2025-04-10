@@ -46,3 +46,19 @@ up_build: down build
 	@echo "Building and starting Docker images..."
 	docker compose up --build -d
 	@echo "Docker images built and started!"
+
+rebuild-board:
+	@echo "Stopping kafka-board container..."
+	docker compose stop kafka-board
+	@echo "Rebuilding kafka-board..."
+	docker compose build kafka-board
+	@echo "Starting kafka-board container..."
+	docker compose up -d kafka-board
+	@echo "Kafka-board rebuild complete!"
+
+help:
+	@echo 'Usage:'
+	@echo '  make <target>'
+	@echo ''
+	@echo 'Targets:'
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -20,6 +21,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 	http.HandleFunc("/validate-payload", handleValidatePayload)
+	http.HandleFunc("/validate", handleValidation)
 
 	// Single handler for all static images
 	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
@@ -48,4 +50,33 @@ func main() {
 	if err := http.ListenAndServe(":9080", nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func handleValidation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var request struct {
+		Schema  string `json:"schema"`
+		Payload string `json:"payload"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Perform your validation logic here
+	// This is where you'd validate the payload against the schema
+
+	// Send back the validation result
+	response := map[string]interface{}{
+		"isValid": true,                    // Replace with actual validation result
+		"message": "Validation successful", // Replace with actual message
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

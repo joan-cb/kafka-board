@@ -310,7 +310,19 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 
 func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	log.Print("handleValidatePayload called")
-	t := template.Must(template.New("validate-payload").Parse(testPayloadchemaTemplate))
 
-	t.Execute(w, nil)
+	// Create a data structure to pass to the template
+	data := struct {
+		SubjectName string
+	}{
+		SubjectName: r.URL.Query().Get("topic"),
+	}
+
+	// Use the correct template name
+	t := template.Must(template.New("validate-payload").Parse(testPayloadSchemaTemplate))
+	if err := t.Execute(w, data); err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+		return
+	}
 }
