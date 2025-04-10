@@ -25,7 +25,7 @@ var homeTemplate string = `<!DOCTYPE html>
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: #cce6ff;
+            background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
             color: var(--text-primary);
             line-height: 1.6;
             position: relative;
@@ -34,31 +34,18 @@ var homeTemplate string = `<!DOCTYPE html>
         }
 
         h1 {
-            color: var(--primary-color);
             text-align: center;
             margin-bottom: 30px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px var(--shadow-color);
-            position: relative;
-            padding-bottom: 15px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             font-weight: 800;
             letter-spacing: -0.5px;
-        }
-
-        h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            border-radius: 2px;
-            box-shadow: 0 2px 4px var(--shadow-color);
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 10px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px var(--shadow-color);
         }
 
         .header-container {
@@ -71,13 +58,8 @@ var homeTemplate string = `<!DOCTYPE html>
             backdrop-filter: blur(10px);
         }
 
-        .header-image {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            width: 800px;
-            margin-bottom: 10px;
+        .header-image, .footer-image, .slack-image, .github-image {
+            display: none;
         }
 
         .header-subtitle {
@@ -109,11 +91,16 @@ var homeTemplate string = `<!DOCTYPE html>
         }
 
         .slack-button {
-            background: none;
-            border: none;
-            padding: 0;
+            padding: 8px 20px;
             cursor: pointer;
             transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
         }
 
         .slack-button:hover {
@@ -126,11 +113,16 @@ var homeTemplate string = `<!DOCTYPE html>
         }
 
         .github-button {
-            background: none;
-            border: none;
-            padding: 0;
+            padding: 8px 20px;
             cursor: pointer;
             transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
         }
 
         .github-button:hover {
@@ -166,6 +158,9 @@ var homeTemplate string = `<!DOCTYPE html>
             overflow: hidden;
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.95);
+            display: flex;              /* Add this */
+            flex-direction: column;     /* Add this */
+            justify-content: space-between;  /* Add this */
         }
 
         .subject-card::before {
@@ -496,8 +491,8 @@ var homeTemplate string = `<!DOCTYPE html>
             right: 0;
             text-align: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
             z-index: 100;
         }
 
@@ -510,6 +505,23 @@ var homeTemplate string = `<!DOCTYPE html>
         }
 
         .back-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .test-button {
             display: inline-block;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
@@ -520,9 +532,43 @@ var homeTemplate string = `<!DOCTYPE html>
             font-size: 1em;
             font-weight: 600;
             transition: all var(--transition-speed) ease;
-            margin-bottom: 15px;
             box-shadow: 0 2px 4px var(--shadow-color);
             text-decoration: none;
+            margin: 0;  /* remove any margin */
+            white-space: nowrap;  /* prevents text wrapping */
+            margin-left: 0 !important;  /* force left alignment */
+            margin-right: auto;  /* pushes the button to the left */
+        }
+        .icon-badge-text {
+            margin-left: 4px;
+        }
+
+        /* Added footer p style */
+        .footer p {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            margin: 0; /* Reset default margin */
+        }
+
+        .test-json-label {
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .test-buttons-container {
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+            margin-top: auto;          /* Add this to push it to the bottom */
+            padding-top: 20px;         /* Add some space from the content above */
+        }
+
+        .left-button, .right-button {
+            flex: 1;
         }
 
         .test-button {
@@ -536,27 +582,41 @@ var homeTemplate string = `<!DOCTYPE html>
             font-size: 1em;
             font-weight: 600;
             transition: all var(--transition-speed) ease;
-            margin-bottom: 15px;
-            margin-left: 15px;
             box-shadow: 0 2px 4px var(--shadow-color);
             text-decoration: none;
+            margin: 0;
+            white-space: nowrap;
+            margin-left: 0 !important;
         }
 
-        .icon-badge-text {
-            margin-left: 4px;
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .test-button:active {
+            transform: translateY(0);
+        }
+
+        .test-button:first-child {
+            margin-right: auto;
+        }
+
+        .test-button:last-child {
+            margin-left: auto;
+        }
+
+        .left-button, .right-button {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
     <div class="header-container">
-        <img src="/static/header.png" class="header-image" alt="Header">
+        <h1>Kafka Schema & Payload Validator ✨</h1>
         <div class="header-stats">
-            <a href="https://slack.com" target="_blank" class="slack-button">
-                <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
-            </a>
-            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
-                <img src="/static/github.png" class="github-image" alt="GitHub">
-            </a>
+            <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
         </div>
     </div>
     <div class="search-container">
@@ -578,12 +638,12 @@ var homeTemplate string = `<!DOCTYPE html>
             <div class="property-value">
                 {{with .GlobalConfig.Normalize}}
                     {{if .}}
-                        <span class="icon-badge icon-badge-true">True</span>
+                        <span class="icon-badge icon-badge-true">✅ True</span>
                     {{else}}
-                        <span class="icon-badge icon-badge-false">False</span>
+                        <span class="icon-badge icon-badge-false">❌ False</span>
                     {{end}}
                 {{else}}
-                    <span class="icon-badge icon-badge-none">Not Set</span>
+                    <span class="icon-badge icon-badge-none">⚠️ Not Set</span>
                 {{end}}
             </div>
         </div>
@@ -591,13 +651,13 @@ var homeTemplate string = `<!DOCTYPE html>
             <span class="property-label">Compatibility Level:</span>
             <div class="property-value">
                 {{if eq .GlobalConfig.CompatibilityLevel "BACKWARD"}}
-                    <span class="icon-badge icon-badge-backward">Backward</span>
+                    <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FORWARD"}}
-                    <span class="icon-badge icon-badge-forward">Forward</span>
+                    <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FULL"}}
-                    <span class="icon-badge icon-badge-full">Full</span>
+                    <span class="icon-badge icon-badge-full">🔄 Full</span>
                 {{else}}
-                    <span class="icon-badge icon-badge-none">{{.GlobalConfig.CompatibilityLevel}}</span>
+                    <span class="icon-badge icon-badge-none">❓ {{.GlobalConfig.CompatibilityLevel}}</span>
                 {{end}}
             </div>
         </div>
@@ -623,12 +683,12 @@ var homeTemplate string = `<!DOCTYPE html>
                 <div class="property-value">
                     {{with .Normalize}}
                         {{if .}}
-                            <span class="icon-badge icon-badge-true">True</span>
+                            <span class="icon-badge icon-badge-true">✅ True</span>
                         {{else}}
-                            <span class="icon-badge icon-badge-false">False</span>
+                            <span class="icon-badge icon-badge-false">❌ False</span>
                         {{end}}
                     {{else}}
-                        <span class="icon-badge icon-badge-none">Not Set</span>
+                        <span class="icon-badge icon-badge-none">⚠️ Not Set</span>
                     {{end}}
                 </div>
             </div>
@@ -636,13 +696,13 @@ var homeTemplate string = `<!DOCTYPE html>
                 <span class="property-label">Compatibility Level:</span>
                 <div class="property-value">
                     {{if eq .CompatibilityLevel "BACKWARD"}}
-                        <span class="icon-badge icon-badge-backward">Backward</span>
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
                     {{else if eq .CompatibilityLevel "FORWARD"}}
-                        <span class="icon-badge icon-badge-forward">Forward</span>
+                        <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                     {{else if eq .CompatibilityLevel "FULL"}}
-                        <span class="icon-badge icon-badge-full">Full</span>
+                        <span class="icon-badge icon-badge-full">🔄 Full</span>
                     {{else}}
-                        <span class="icon-badge icon-badge-none">{{.CompatibilityLevel}}</span>
+                        <span class="icon-badge icon-badge-none">❓ {{.CompatibilityLevel}}</span>
                     {{end}}
                 </div>
             </div>
@@ -656,11 +716,13 @@ var homeTemplate string = `<!DOCTYPE html>
             <div class="property">
                 <span class="property-label">Status:</span>
                 <div class="property-value">
-                    <span class="icon-badge icon-badge-none">Using Global Default</span>
+                    <span class="icon-badge icon-badge-none">⚠️ Using Global Default</span>
                 </div>
             </div>
             {{end}}
-            <button onclick="viewSchema('{{.GetName}}')">View Schema</button>
+            <div class="test-buttons-container">
+                <button class="test-button" onclick="viewSchema('{{.GetName}}')">View Schema</button>
+            </div>
         </div>
         {{end}}
     </div>
@@ -670,7 +732,7 @@ var homeTemplate string = `<!DOCTYPE html>
     ╔══════════════════════════════════════╗
     ║  ¯\_(ツ)_/¯                          ║
     ║                                     ║
-    ║  No subjects found!                 ║
+    ║  No subjects found! 🔍               ║
     ║                                     ║
     ║  Try a different search term        ║
     ║                                     ║
@@ -680,7 +742,7 @@ var homeTemplate string = `<!DOCTYPE html>
     </div>
 
     <div class="footer">
-        <img src="/static/footer.png" class="footer-image" alt="Footer">
+        <p>🚀 Global Commerce - Vidar</p>
     </div>
 
     <script>
@@ -789,12 +851,19 @@ var schemaTemplate string = `<!DOCTYPE html>
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: #cce6ff;
+            background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
             position: relative;
             padding-bottom: 80px;
+        }
+        .test-buttons-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            gap: 20px;
         }
 
         .header-container {
@@ -808,83 +877,23 @@ var schemaTemplate string = `<!DOCTYPE html>
             position: relative;
         }
 
-        .header-image {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            width: 800px;
-            margin-bottom: 10px;
-        }
-
-        .header-stats {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .slack-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            transition: transform var(--transition-speed) ease;
-        }
-
-        .slack-button:hover {
-            transform: scale(1.05);
-        }
-
-        .slack-button img {
-            height: 40px;
-            width: auto;
-        }
-
-        .github-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            transition: transform var(--transition-speed) ease;
-        }
-
-        .github-button:hover {
-            transform: scale(1.05);
-        }
-
-        .github-button img {
-            height: 40px;
-            width: auto;
+        .header-image, .footer-image, .slack-image, .github-image {
+            display: none;
         }
 
         h1 {
-            color: var(--primary-color);
             text-align: center;
             margin: 20px 0;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px var(--shadow-color);
-            position: relative;
-            padding-bottom: 15px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             font-weight: 800;
             letter-spacing: -0.5px;
-        }
-
-        h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            border-radius: 2px;
-            box-shadow: 0 2px 4px var(--shadow-color);
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 10px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px var(--shadow-color);
         }
 
         .button-container {
@@ -897,7 +906,7 @@ var schemaTemplate string = `<!DOCTYPE html>
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 20px;
             border-radius: 25px;
             cursor: pointer;
             font-size: 1em;
@@ -905,9 +914,19 @@ var schemaTemplate string = `<!DOCTYPE html>
             transition: all var(--transition-speed) ease;
             box-shadow: 0 2px 4px var(--shadow-color);
             text-decoration: none;
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
         }
 
         .test-button {
@@ -921,6 +940,7 @@ var schemaTemplate string = `<!DOCTYPE html>
             font-weight: 600;
             transition: all var(--transition-speed) ease;
             box-shadow: 0 2px 4px var(--shadow-color);
+            margin-bottom: 25 px;
         }
 
         .back-button:hover, .test-button:hover {
@@ -939,6 +959,8 @@ var schemaTemplate string = `<!DOCTYPE html>
             margin: 20px 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .schema-content {
@@ -1029,8 +1051,8 @@ var schemaTemplate string = `<!DOCTYPE html>
             right: 0;
             text-align: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
             z-index: 100;
         }
 
@@ -1041,53 +1063,66 @@ var schemaTemplate string = `<!DOCTYPE html>
             margin: 0 auto;
             width: 300px;
         }
+
+        /* Added footer p style */
+        .footer p {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            margin: 0; /* Reset default margin */
+        }
     </style>
 </head>
 <body>
     <div class="header-container">
         <a href="/" class="back-button">Back to Dashboard</a>
-        <img src="/static/header.png" class="header-image" alt="Header">
+        <h1>Kafka Schema & Payload Validator ✨</h1>
         <div class="header-stats">
-            <a href="https://slack.com" target="_blank" class="slack-button">
-                <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
-            </a>
-            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
-                <img src="/static/github.png" class="github-image" alt="GitHub">
-            </a>
+            <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
         </div>
-        <h1>{{.SubjectName}}</h1>
     </div>
     {{range .Schemas}}
     <div class="schema-card">
-        <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this schema</button>
+        <div class="test-buttons-container">
+            <div class="left-button">
+                <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this schema</button>
+            </div>
+            <div class="right-button">
+                <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this payload</button>
+            </div>
+        </div>
         <div class="property">
             <span class="property-label">Version:</span>
             <div class="property-value">
-                <span class="icon-badge icon-badge-version">{{.Version}}</span>
+                <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
             </div>
         </div>
         <div class="property">
             <span class="property-label">ID:</span>
             <div class="property-value">
-                <span class="icon-badge icon-badge-id">{{.Id}}</span>
+                <span class="icon-badge icon-badge-id">🆔 {{.Id}}</span>
             </div>
         </div>
         <div class="property">
             <span class="property-label">Schema Type:</span>
             <div class="property-value">
-                <span class="icon-badge icon-badge-type">{{.SchemaType}}</span>
+                <span class="icon-badge icon-badge-type">📝 {{.SchemaType}}</span>
             </div>
         </div>
         <div class="property">
             <span class="property-label">Schema:</span>
             <div class="schema-content">
-                <pre>{{.Schema | formatJSON | html}}</pre>
+                <pre>📄 {{.Schema | formatJSON | html}}</pre>
             </div>
         </div>
     </div>
     {{end}}
     <div class="footer">
-        <img src="/static/footer.png" class="footer-image" alt="Footer">
+        <p>🚀 Global Commerce - Vidar</p>
     </div>
 
     <script>
@@ -1139,7 +1174,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: #cce6ff;
+            background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
@@ -1158,83 +1193,23 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             position: relative;
         }
 
-        .header-image {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            width: 800px;
-            margin-bottom: 10px;
-        }
-
-        .header-stats {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .slack-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            transition: transform var(--transition-speed) ease;
-        }
-
-        .slack-button:hover {
-            transform: scale(1.05);
-        }
-
-        .slack-button img {
-            height: 40px;
-            width: auto;
-        }
-
-        .github-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            transition: transform var(--transition-speed) ease;
-        }
-
-        .github-button:hover {
-            transform: scale(1.05);
-        }
-
-        .github-button img {
-            height: 40px;
-            width: auto;
+        .header-image, .footer-image, .slack-image, .github-image {
+            display: none;
         }
 
         h1 {
-            color: var(--primary-color);
             text-align: center;
             margin: 20px 0;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px var(--shadow-color);
-            position: relative;
-            padding-bottom: 15px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             font-weight: 800;
             letter-spacing: -0.5px;
-        }
-
-        h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            border-radius: 2px;
-            box-shadow: 0 2px 4px var(--shadow-color);
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 10px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px var(--shadow-color);
         }
 
         .button-container {
@@ -1247,7 +1222,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 8px 20px;
             border-radius: 25px;
             cursor: pointer;
             font-size: 1em;
@@ -1255,10 +1230,10 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             transition: all var(--transition-speed) ease;
             box-shadow: 0 2px 4px var(--shadow-color);
             text-decoration: none;
-            display: inline-block;
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
         }
 
         .back-button:hover {
@@ -1375,8 +1350,8 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             right: 0;
             text-align: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
             z-index: 100;
         }
 
@@ -1386,6 +1361,17 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             display: block;
             margin: 0 auto;
             width: 300px;
+        }
+
+        /* Added footer p style */
+        .footer p {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            margin: 0; /* Reset default margin */
         }
 
         /* Badge styles */
@@ -1474,42 +1460,39 @@ var testSchemaTemplate string = `<!DOCTYPE html>
 <body>
     <div class="header-container">
         <a href="/schema/?topic={{.SubjectName}}" class="back-button">Back to Schema View</a>
-        <img src="/static/header.png" class="header-image" alt="Header">
+        <h1>Kafka Schema Dashboard ✨</h1>
         <div class="header-stats">
-            <a href="https://slack.com" target="_blank" class="slack-button">
-                <img src="/static/slack-channel.png" class="slack-image" alt="Slack">
-            </a>
-            <a href="https://www.lemonde.fr" target="_blank" class="github-button">
-                <img src="/static/github.png" class="github-image" alt="GitHub">
-            </a>
+            <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
         </div>
-        <h1>Test Schema Compatibility</h1>
     </div>
 
     <div class="test-container">
         <div class="info-section">
             <div class="info-item">
                 <span class="info-label">Subject:</span>
-                <span class="icon-badge icon-badge-subject">{{.SubjectName}}</span>
+                <span class="icon-badge icon-badge-subject">📋 {{.SubjectName}}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Version:</span>
-                <span class="icon-badge icon-badge-version">{{.Version}}</span>
+                <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">ID:</span>
-                <span class="icon-badge icon-badge-id">{{.SchemaID}}</span>
+                <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
             </div>
         </div>
 
         <div class="test-form">
-            <label for="testJson">Enter JSON to test compatibility:</label>
+            <label for="testJson" class="test-json-label">
+                <span class="property-label">Enter JSON to test compatibility 📝</span>
+            </label>
             <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
             <button id="testButton" class="submit-button">Test Compatibility</button>
         </div>
 
         <div id="resultContainer" class="result-container">
-            <div class="result-title">Compatibility Test Results</div>
+            <div class="result-title">Compatibility Test Results 📊</div>
             <div class="result-item">
                 <span class="result-label">Compatibility:</span>
                 <span id="compatibilityResult"></span>
@@ -1530,7 +1513,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
     </div>
 
     <div class="footer">
-        <img src="/static/footer.png" class="footer-image" alt="Footer">
+        <p>🚀 Global Commerce - Vidar</p>
     </div>
 
     <script>
@@ -1640,3 +1623,492 @@ var testSchemaTemplate string = `<!DOCTYPE html>
     </script>
 </body>
 </html>`
+
+// var testPayloadTemplate string = `<!DOCTYPE html>
+// <html>
+// <head>
+//     <title>Test Schema Compatibility</title>
+//     <style>
+//         :root {
+//             --primary-color: #4a90e2;
+//             --primary-dark: #357abd;
+//             --primary-light: #e8f2f9;
+//             --secondary-color: #9b59b6;
+//             --secondary-light: #f5eef8;
+//             --text-primary: #2c3e50;
+//             --text-secondary: #546e7a;
+//             --background-start: #f0f4f8;
+//             --background-end: #e8f2f9;
+//             --card-background: #ffffff;
+//             --shadow-color: rgba(0, 0, 0, 0.1);
+//             --transition-speed: 0.3s;
+
+//             /* Badge Colors */
+//             --badge-success-bg: #e3f9e5;
+//             --badge-success-text: #1e8e3e;
+//             --badge-error-bg: #fdeced;
+//             --badge-error-text: #d93025;
+//             --badge-warning-bg: #fff8e1;
+//             --badge-warning-text: #f57c00;
+//             --badge-info-bg: #e8f0fe;
+//             --badge-info-text: #1a73e8;
+//             --badge-neutral-bg: #f5f5f5;
+//             --badge-neutral-text: #5f6368;
+//             --badge-type-bg: #f3e5f5;
+//             --badge-type-text: #9c27b0;
+//         }
+
+//         body {
+//             font-family: 'Segoe UI', Arial, sans-serif;
+//             max-width: 1200px;
+//             margin: 0 auto;
+//             padding: 20px;
+//             background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
+//             color: var(--text-primary);
+//             line-height: 1.6;
+//             min-height: 100vh;
+//             position: relative;
+//             padding-bottom: 80px;
+//         }
+
+//         .header-container {
+//             text-align: center;
+//             margin-bottom: 30px;
+//             padding: 20px;
+//             background: rgba(255, 255, 255, 0.9);
+//             border-radius: 15px;
+//             box-shadow: 0 4px 6px var(--shadow-color);
+//             backdrop-filter: blur(10px);
+//             position: relative;
+//         }
+
+//         .header-image, .footer-image, .slack-image, .github-image {
+//             display: none;
+//         }
+
+//         h1 {
+//             text-align: center;
+//             margin: 20px 0;
+//             font-size: 2.5em;
+//             text-shadow: 2px 2px 4px var(--shadow-color);
+//             font-weight: 800;
+//             letter-spacing: -0.5px;
+//             display: inline-block;
+//             background-color: var(--primary-light);
+//             color: var(--primary-dark);
+//             padding: 10px 25px;
+//             border-radius: 25px;
+//             box-shadow: 0 4px 6px var(--shadow-color);
+//         }
+
+//         .button-container {
+//             display: flex;
+//             justify-content: space-between;
+//             margin-bottom: 20px;
+//         }
+
+//         .back-button {
+//             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+//             color: white;
+//             border: none;
+//             padding: 8px 20px;
+//             border-radius: 25px;
+//             cursor: pointer;
+//             font-size: 1em;
+//             font-weight: 600;
+//             transition: all var(--transition-speed) ease;
+//             box-shadow: 0 2px 4px var(--shadow-color);
+//             text-decoration: none;
+//             position: fixed;
+//             bottom: 20px;
+//             left: 20px;
+//             z-index: 1000;
+//         }
+
+//         .back-button:hover {
+//             transform: translateY(-2px);
+//             box-shadow: 0 4px 8px var(--shadow-color);
+//         }
+
+//         .back-button:active {
+//             transform: translateY(0);
+//         }
+
+//         .test-container {
+//             background: white;
+//             border-radius: 8px;
+//             padding: 20px;
+//             margin: 20px 0;
+//             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+//         }
+
+//         .test-form {
+//             display: flex;
+//             flex-direction: column;
+//             gap: 15px;
+//         }
+
+//         .info-section {
+//             display: flex;
+//             flex-wrap: wrap;
+//             gap: 15px;
+//             margin-bottom: 15px;
+//             padding: 15px;
+//             background: #f8f8f8;
+//             border-radius: 8px;
+//         }
+
+//         .info-item {
+//             display: flex;
+//             align-items: center;
+//             margin-right: 15px;
+//         }
+
+//         .info-label {
+//             font-weight: bold;
+//             margin-right: 8px;
+//             color: var(--text-secondary);
+//         }
+
+//         textarea {
+//             width: 100%;
+//             min-height: 200px;
+//             padding: 10px;
+//             border: 1px solid #ddd;
+//             border-radius: 4px;
+//             font-family: monospace;
+//             font-size: 14px;
+//             resize: vertical;
+//         }
+
+//         .submit-button {
+//             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+//             color: white;
+//             border: none;
+//             padding: 12px 24px;
+//             border-radius: 25px;
+//             cursor: pointer;
+//             font-size: 1em;
+//             font-weight: 600;
+//             transition: all var(--transition-speed) ease;
+//             box-shadow: 0 2px 4px var(--shadow-color);
+//             align-self: flex-start;
+//         }
+
+//         .submit-button:hover {
+//             transform: translateY(-2px);
+//             box-shadow: 0 4px 8px var(--shadow-color);
+//         }
+
+//         .submit-button:active {
+//             transform: translateY(0);
+//         }
+
+//         .result-container {
+//             margin-top: 20px;
+//             padding: 20px;
+//             background: #f9f9f9;
+//             border-radius: 8px;
+//             border-left: 4px solid var(--primary-color);
+//             display: none;
+//         }
+
+//         .result-title {
+//             font-weight: bold;
+//             margin-bottom: 10px;
+//             color: var(--text-primary);
+//             font-size: 1.2em;
+//         }
+
+//         .result-item {
+//             margin: 10px 0;
+//             display: flex;
+//             align-items: center;
+//         }
+
+//         .result-label {
+//             font-weight: bold;
+//             min-width: 150px;
+//             color: var(--text-secondary);
+//         }
+
+//         .footer {
+//             position: fixed;
+//             bottom: 0;
+//             left: 0;
+//             right: 0;
+//             text-align: center;
+//             padding: 10px;
+//             background: #ffffff;
+//             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+//             z-index: 100;
+//         }
+
+//         .footer-image {
+//             max-width: 100%;
+//             height: auto;
+//             display: block;
+//             margin: 0 auto;
+//             width: 300px;
+//         }
+
+//         /* Added footer p style */
+//         .footer p {
+//             display: inline-block;
+//             background-color: var(--primary-light);
+//             color: var(--primary-dark);
+//             padding: 8px 20px;
+//             border-radius: 20px;
+//             box-shadow: 0 2px 4px var(--shadow-color);
+//             margin: 0; /* Reset default margin */
+//         }
+
+//         /* Badge styles */
+//         .icon-badge {
+//             display: inline-flex;
+//             align-items: center;
+//             padding: 4px 10px;
+//             border-radius: 12px;
+//             font-size: 0.85em;
+//             font-weight: 600;
+//             gap: 4px;
+//             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+//         }
+
+//         .icon-badge-text {
+//             margin-left: 4px;
+//         }
+
+//         .icon-badge-true {
+//             background-color: var(--badge-success-bg);
+//             color: var(--badge-success-text);
+//             border: 1px solid rgba(30, 142, 62, 0.2);
+//         }
+
+//         .icon-badge-false {
+//             background-color: var(--badge-error-bg);
+//             color: var(--badge-error-text);
+//             border: 1px solid rgba(217, 48, 37, 0.2);
+//         }
+
+//         .icon-badge-backward {
+//             background-color: var(--badge-warning-bg);
+//             color: var(--badge-warning-text);
+//             border: 1px solid rgba(245, 124, 0, 0.2);
+//         }
+
+//         .icon-badge-forward {
+//             background-color: var(--badge-info-bg);
+//             color: var(--badge-info-text);
+//             border: 1px solid rgba(26, 115, 232, 0.2);
+//         }
+
+//         .icon-badge-full {
+//             background-color: var(--badge-type-bg);
+//             color: var(--badge-type-text);
+//             border: 1px solid rgba(156, 39, 176, 0.2);
+//         }
+
+//         .icon-badge-type {
+//             background-color: var(--badge-type-bg);
+//             color: var(--badge-type-text);
+//             border: 1px solid rgba(156, 39, 176, 0.2);
+//         }
+
+//         .icon-badge-none {
+//             background-color: var(--badge-neutral-bg);
+//             color: var(--badge-neutral-text);
+//             border: 1px solid rgba(95, 99, 104, 0.2);
+//         }
+
+//         .icon-badge-warning {
+//             background-color: var(--badge-warning-bg);
+//             color: var(--badge-warning-text);
+//             border: 1px solid rgba(245, 124, 0, 0.2);
+//         }
+
+//         .icon-badge-subject {
+//             background-color: var(--badge-info-bg);
+//             color: var(--badge-info-text);
+//             border: 1px solid rgba(26, 115, 232, 0.2);
+//         }
+
+//         .icon-badge-version {
+//             background-color: var(--badge-type-bg);
+//             color: var(--badge-type-text);
+//             border: 1px solid rgba(156, 39, 176, 0.2);
+//         }
+
+//         .icon-badge-id {
+//             background-color: var(--badge-neutral-bg);
+//             color: var(--badge-neutral-text);
+//             border: 1px solid rgba(95, 99, 104, 0.2);
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="header-container">
+//         <a href="/schema/?topic={{.SubjectName}}" class="back-button">Back to Schema View</a>
+//         <h1>Kafka Schema Dashboard ✨</h1>
+//         <div class="header-stats">
+//             <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
+//             <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
+//         </div>
+//     </div>
+
+//     <div class="test-container">
+//         <div class="info-section">
+//             <div class="info-item">
+//                 <span class="info-label">Subject:</span>
+//                 <span class="icon-badge icon-badge-subject">📋 {{.SubjectName}}</span>
+//             </div>
+//             <div class="info-item">
+//                 <span class="info-label">Version:</span>
+//                 <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
+//             </div>
+//             <div class="info-item">
+//                 <span class="info-label">ID:</span>
+//                 <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
+//             </div>
+//         </div>
+
+//         <div class="test-form">
+//             <label for="testJson" class="test-json-label">
+//                 <span class="property-label">Enter JSON to test compatibility 📝</span>
+//             </label>
+//             <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
+//             <button id="testButton" class="submit-button">Test Compatibility</button>
+//         </div>
+
+//         <div id="resultContainer" class="result-container">
+//             <div class="result-title">Compatibility Test Results 📊</div>
+//             <div class="result-item">
+//                 <span class="result-label">Compatibility:</span>
+//                 <span id="compatibilityResult"></span>
+//             </div>
+//             <div class="result-item">
+//                 <span class="result-label">HTTP Status:</span>
+//                 <span id="statusResult"></span>
+//             </div>
+//             <div class="result-item">
+//                 <span class="result-label">Error Code:</span>
+//                 <span id="errorCodeResult"></span>
+//             </div>
+//             <div class="result-item">
+//                 <span class="result-label">Message:</span>
+//                 <span id="messageResult"></span>
+//             </div>
+//         </div>
+//     </div>
+
+//     <div class="footer">
+//         <p>🚀 Global Commerce - Vidar</p>
+//     </div>
+
+//     <script>
+//         document.getElementById('testButton').addEventListener('click', testSchema);
+
+//         function testSchema() {
+//             const testJsonText = document.getElementById('testJson').value;
+//             const subject = "{{.SubjectName}}";
+//             const version = "{{.Version}}";
+//             const id = "{{.SchemaID}}";
+
+//             // Show loading state
+//             const testButton = document.getElementById('testButton');
+//             const originalButtonText = testButton.textContent;
+//             testButton.textContent = 'Testing...';
+//             testButton.disabled = true;
+
+//             fetch('/test-schema', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json'
+//                 },
+//                 body: JSON.stringify({
+//                     subject: subject,
+//                     version: version,
+//                     id: id,
+//                     json: testJsonText
+//                 })
+//             })
+//             .then(response => response.json())
+//             .then(data => {
+//                 // Reset button
+//                 testButton.textContent = originalButtonText;
+//                 testButton.disabled = false;
+
+//                 // Determine badge classes based on response values
+//                 let compatibilityBadgeClass = "icon-badge-none";
+//                 if (data.isCompatible === true) {
+//                     compatibilityBadgeClass = "icon-badge-true";
+//                 } else if (data.isCompatible === false) {
+//                     compatibilityBadgeClass = "icon-badge-false";
+//                 } else {
+//                     compatibilityBadgeClass = "icon-badge-warning";
+//                 }
+
+//                 let statusBadgeClass = "icon-badge-none";
+//                 if (data.httpStatus >= 400) {
+//                     statusBadgeClass = "icon-badge-false";
+//                 } else if (data.httpStatus >= 300) {
+//                     statusBadgeClass = "icon-badge-warning";
+//                 } else if (data.httpStatus >= 200) {
+//                     statusBadgeClass = "icon-badge-true";
+//                 }
+
+//                 let errorBadgeClass = "icon-badge-none";
+//                 if (data.errorCode > 0) {
+//                     errorBadgeClass = "icon-badge-false";
+//                 }
+
+//                 let messageBadgeClass = "icon-badge-none";
+//                 if (data.message && data.message !== "None") {
+//                     if (data.isCompatible === false) {
+//                         messageBadgeClass = "icon-badge-false";
+//                     } else if (data.isCompatible === true) {
+//                         messageBadgeClass = "icon-badge-true";
+//                     }
+//                 }
+
+//                 // Update the result display
+//                 document.getElementById('compatibilityResult').innerHTML =
+//                     '<span class="icon-badge ' + compatibilityBadgeClass + '">' + (data.isCompatible === true ? 'Compatible' : data.isCompatible === false ? 'Not Compatible' : 'Unknown') + '</span>';
+
+//                 document.getElementById('statusResult').innerHTML =
+//                     '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+
+//                 document.getElementById('errorCodeResult').innerHTML =
+//                     '<span class="icon-badge ' + errorBadgeClass + '">' + (data.errorCode === 0 ? 'None' : data.errorCode) + '</span>';
+
+//                 document.getElementById('messageResult').innerHTML =
+//                     '<span class="icon-badge ' + messageBadgeClass + '">' + (data.message && data.message !== "None" ? data.message : 'None') + '</span>';
+
+//                 // Show the result container
+//                 document.getElementById('resultContainer').style.display = 'block';
+//             })
+//             .catch(error => {
+//                 // Reset button
+//                 testButton.textContent = originalButtonText;
+//                 testButton.disabled = false;
+
+//                 // Show error in the result container
+//                 document.getElementById('compatibilityResult').innerHTML =
+//                     '<span class="icon-badge icon-badge-false">Error</span>';
+
+//                 document.getElementById('statusResult').innerHTML =
+//                     '<span class="icon-badge icon-badge-false">Error</span>';
+
+//                 document.getElementById('errorCodeResult').innerHTML =
+//                     '<span class="icon-badge icon-badge-false">API Error</span>';
+
+//                 document.getElementById('messageResult').innerHTML =
+//                     '<span class="icon-badge icon-badge-false">' + (error.message || 'Failed to test schema') + '</span>';
+
+//                 // Show the result container
+//                 document.getElementById('resultContainer').style.display = 'block';
+//             });
+//         }
+//     </script>
+// </body>
+// </html>`
