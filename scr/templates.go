@@ -622,7 +622,7 @@ var homeTemplate string = `<!DOCTYPE html>
     <div class="search-container">
         <div class="subject-counter">
             <span class="stat-icon">📊</span>
-            <span>{{len .Configs}} Subjects</span>
+            <span>{{len .Configs}} Subjects registered in the current cluster</span>
         </div>
         <input type="text" id="searchInput" class="search-input" placeholder="Search subjects..." onkeyup="filterSubjects()">
     </div>
@@ -962,7 +962,6 @@ var schemaTemplate string = `<!DOCTYPE html>
             display: flex;
             flex-direction: column;
         }
-
         .schema-content {
             background: #f8f8f8;
             padding: 15px;
@@ -970,8 +969,10 @@ var schemaTemplate string = `<!DOCTYPE html>
             white-space: pre-wrap;
             font-family: monospace;
             overflow-x: auto;
+            margin: 0 15px;          /* Add horizontal margin */
+            width: calc(100% - 30px);  /* Full width minus margins */
+            box-sizing: border-box;    /* Include padding in width calculation */
         }
-
         .schema-content pre {
             margin: 0;
             padding: 0;
@@ -986,7 +987,7 @@ var schemaTemplate string = `<!DOCTYPE html>
             margin: 12px 0;
             color: var(--text-secondary);
             display: flex;
-            align-items: center;
+            align-items: flex-start;  /* Change from center to flex-start */
         }
 
         .property-label {
@@ -997,8 +998,16 @@ var schemaTemplate string = `<!DOCTYPE html>
             background-color: var(--primary-light);
             border-radius: 4px;
             margin-right: 10px;
+            margin-top: 0;           /* Add this to ensure top alignment */
+        }
+                /* Specific alignment for schema content container */
+        .property:has(.schema-content) {
+            align-items: flex-start;  /* Ensure top alignment */
         }
 
+        .property:has(.schema-content) .property-label {
+            margin-top: 0;           /* Ensure label starts at the top */
+        }   
         .property-value {
             display: flex;
             align-items: center;
@@ -1074,6 +1083,48 @@ var schemaTemplate string = `<!DOCTYPE html>
             box-shadow: 0 2px 4px var(--shadow-color);
             margin: 0; /* Reset default margin */
         }
+        .slack-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .slack-button:hover {
+            transform: scale(1.05);
+        }
+
+        .slack-button img {
+            height: 40px;
+        }
+        .github-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .github-button:hover {
+            transform: scale(1.05);
+        }
+
+        .github-button img {
+            height: 40px;
+            width: auto;
+        }
+
     </style>
 </head>
 <body>
@@ -1116,7 +1167,7 @@ var schemaTemplate string = `<!DOCTYPE html>
         <div class="property">
             <span class="property-label">Schema:</span>
             <div class="schema-content">
-                <pre>📄 {{.Schema | formatJSON | html}}</pre>
+                <pre> {{.Schema | formatJSON | html}}</pre>
             </div>
         </div>
     </div>
@@ -1454,6 +1505,47 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             background-color: var(--badge-neutral-bg);
             color: var(--badge-neutral-text);
             border: 1px solid rgba(95, 99, 104, 0.2);
+        }
+        .slack-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .slack-button:hover {
+            transform: scale(1.05);
+        }
+
+        .slack-button img {
+            height: 40px;
+        }
+        .github-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .github-button:hover {
+            transform: scale(1.05);
+        }
+
+        .github-button img {
+            height: 40px;
+            width: auto;
         }
     </style>
 </head>
