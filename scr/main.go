@@ -19,6 +19,7 @@ func main() {
 		log.Println("Health check received")
 		w.WriteHeader(http.StatusOK)
 	})
+	http.HandleFunc("/validate-payload", handleValidatePayload)
 
 	// Single handler for all static images
 	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {

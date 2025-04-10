@@ -1143,7 +1143,7 @@ var schemaTemplate string = `<!DOCTYPE html>
                 <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this schema</button>
             </div>
             <div class="right-button">
-                <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this payload</button>
+                <button class="test-button" onclick="handleValidatePayload()">Test against this payload</button>
             </div>
         </div>
         <div class="property">
@@ -1181,6 +1181,10 @@ var schemaTemplate string = `<!DOCTYPE html>
             window.location.href = '/test-schema/?topic=' + encodeURIComponent(subjectName) + 
                                  '&version=' + encodeURIComponent(version) + 
                                  '&id=' + encodeURIComponent(id);
+        }
+        function handleValidatePayload() {
+            console.log("handleValidatePayload called");
+            window.location.href = '/validate-payload';
         }
     </script>
 </body>
@@ -1716,491 +1720,532 @@ var testSchemaTemplate string = `<!DOCTYPE html>
 </body>
 </html>`
 
-// var testPayloadTemplate string = `<!DOCTYPE html>
-// <html>
-// <head>
-//     <title>Test Schema Compatibility</title>
-//     <style>
-//         :root {
-//             --primary-color: #4a90e2;
-//             --primary-dark: #357abd;
-//             --primary-light: #e8f2f9;
-//             --secondary-color: #9b59b6;
-//             --secondary-light: #f5eef8;
-//             --text-primary: #2c3e50;
-//             --text-secondary: #546e7a;
-//             --background-start: #f0f4f8;
-//             --background-end: #e8f2f9;
-//             --card-background: #ffffff;
-//             --shadow-color: rgba(0, 0, 0, 0.1);
-//             --transition-speed: 0.3s;
+var testPayloadchemaTemplate string = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Schema Compatibility</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --primary-dark: #357abd;
+            --primary-light: #e8f2f9;
+            --secondary-color: #9b59b6;
+            --secondary-light: #f5eef8;
+            --text-primary: #2c3e50;
+            --text-secondary: #546e7a;
+            --background-start: #f0f4f8;
+            --background-end: #e8f2f9;
+            --card-background: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+            
+            /* Badge Colors */
+            --badge-success-bg: #e3f9e5;
+            --badge-success-text: #1e8e3e;
+            --badge-error-bg: #fdeced;
+            --badge-error-text: #d93025;
+            --badge-warning-bg: #fff8e1;
+            --badge-warning-text: #f57c00;
+            --badge-info-bg: #e8f0fe;
+            --badge-info-text: #1a73e8;
+            --badge-neutral-bg: #f5f5f5;
+            --badge-neutral-text: #5f6368;
+            --badge-type-bg: #f3e5f5;
+            --badge-type-text: #9c27b0;
+        }
 
-//             /* Badge Colors */
-//             --badge-success-bg: #e3f9e5;
-//             --badge-success-text: #1e8e3e;
-//             --badge-error-bg: #fdeced;
-//             --badge-error-text: #d93025;
-//             --badge-warning-bg: #fff8e1;
-//             --badge-warning-text: #f57c00;
-//             --badge-info-bg: #e8f0fe;
-//             --badge-info-text: #1a73e8;
-//             --badge-neutral-bg: #f5f5f5;
-//             --badge-neutral-text: #5f6368;
-//             --badge-type-bg: #f3e5f5;
-//             --badge-type-text: #9c27b0;
-//         }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+        }
 
-//         body {
-//             font-family: 'Segoe UI', Arial, sans-serif;
-//             max-width: 1200px;
-//             margin: 0 auto;
-//             padding: 20px;
-//             background: linear-gradient(to bottom, #1a5fb4, #80bdff, #ffffff);
-//             color: var(--text-primary);
-//             line-height: 1.6;
-//             min-height: 100vh;
-//             position: relative;
-//             padding-bottom: 80px;
-//         }
+        .header-container {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
 
-//         .header-container {
-//             text-align: center;
-//             margin-bottom: 30px;
-//             padding: 20px;
-//             background: rgba(255, 255, 255, 0.9);
-//             border-radius: 15px;
-//             box-shadow: 0 4px 6px var(--shadow-color);
-//             backdrop-filter: blur(10px);
-//             position: relative;
-//         }
+        .header-image, .footer-image, .slack-image, .github-image {
+            display: none;
+        }
 
-//         .header-image, .footer-image, .slack-image, .github-image {
-//             display: none;
-//         }
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px var(--shadow-color);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 10px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
 
-//         h1 {
-//             text-align: center;
-//             margin: 20px 0;
-//             font-size: 2.5em;
-//             text-shadow: 2px 2px 4px var(--shadow-color);
-//             font-weight: 800;
-//             letter-spacing: -0.5px;
-//             display: inline-block;
-//             background-color: var(--primary-light);
-//             color: var(--primary-dark);
-//             padding: 10px 25px;
-//             border-radius: 25px;
-//             box-shadow: 0 4px 6px var(--shadow-color);
-//         }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
 
-//         .button-container {
-//             display: flex;
-//             justify-content: space-between;
-//             margin-bottom: 20px;
-//         }
+        .back-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
 
-//         .back-button {
-//             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-//             color: white;
-//             border: none;
-//             padding: 8px 20px;
-//             border-radius: 25px;
-//             cursor: pointer;
-//             font-size: 1em;
-//             font-weight: 600;
-//             transition: all var(--transition-speed) ease;
-//             box-shadow: 0 2px 4px var(--shadow-color);
-//             text-decoration: none;
-//             position: fixed;
-//             bottom: 20px;
-//             left: 20px;
-//             z-index: 1000;
-//         }
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
 
-//         .back-button:hover {
-//             transform: translateY(-2px);
-//             box-shadow: 0 4px 8px var(--shadow-color);
-//         }
+        .back-button:active {
+            transform: translateY(0);
+        }
 
-//         .back-button:active {
-//             transform: translateY(0);
-//         }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-//         .test-container {
-//             background: white;
-//             border-radius: 8px;
-//             padding: 20px;
-//             margin: 20px 0;
-//             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-//         }
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-//         .test-form {
-//             display: flex;
-//             flex-direction: column;
-//             gap: 15px;
-//         }
+        .info-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
 
-//         .info-section {
-//             display: flex;
-//             flex-wrap: wrap;
-//             gap: 15px;
-//             margin-bottom: 15px;
-//             padding: 15px;
-//             background: #f8f8f8;
-//             border-radius: 8px;
-//         }
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
 
-//         .info-item {
-//             display: flex;
-//             align-items: center;
-//             margin-right: 15px;
-//         }
+        .info-label {
+            font-weight: bold;
+            margin-right: 8px;
+            color: var(--text-secondary);
+        }
 
-//         .info-label {
-//             font-weight: bold;
-//             margin-right: 8px;
-//             color: var(--text-secondary);
-//         }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
 
-//         textarea {
-//             width: 100%;
-//             min-height: 200px;
-//             padding: 10px;
-//             border: 1px solid #ddd;
-//             border-radius: 4px;
-//             font-family: monospace;
-//             font-size: 14px;
-//             resize: vertical;
-//         }
+        .submit-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            align-self: flex-start;
+        }
 
-//         .submit-button {
-//             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-//             color: white;
-//             border: none;
-//             padding: 12px 24px;
-//             border-radius: 25px;
-//             cursor: pointer;
-//             font-size: 1em;
-//             font-weight: 600;
-//             transition: all var(--transition-speed) ease;
-//             box-shadow: 0 2px 4px var(--shadow-color);
-//             align-self: flex-start;
-//         }
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
 
-//         .submit-button:hover {
-//             transform: translateY(-2px);
-//             box-shadow: 0 4px 8px var(--shadow-color);
-//         }
+        .submit-button:active {
+            transform: translateY(0);
+        }
 
-//         .submit-button:active {
-//             transform: translateY(0);
-//         }
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+        }
 
-//         .result-container {
-//             margin-top: 20px;
-//             padding: 20px;
-//             background: #f9f9f9;
-//             border-radius: 8px;
-//             border-left: 4px solid var(--primary-color);
-//             display: none;
-//         }
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-size: 1.2em;
+        }
 
-//         .result-title {
-//             font-weight: bold;
-//             margin-bottom: 10px;
-//             color: var(--text-primary);
-//             font-size: 1.2em;
-//         }
+        .result-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
 
-//         .result-item {
-//             margin: 10px 0;
-//             display: flex;
-//             align-items: center;
-//         }
+        .result-label {
+            font-weight: bold;
+            min-width: 150px;
+            color: var(--text-secondary);
+        }
 
-//         .result-label {
-//             font-weight: bold;
-//             min-width: 150px;
-//             color: var(--text-secondary);
-//         }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 10px;
+            background: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
 
-//         .footer {
-//             position: fixed;
-//             bottom: 0;
-//             left: 0;
-//             right: 0;
-//             text-align: center;
-//             padding: 10px;
-//             background: #ffffff;
-//             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-//             z-index: 100;
-//         }
+        .footer-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            width: 300px;
+        }
 
-//         .footer-image {
-//             max-width: 100%;
-//             height: auto;
-//             display: block;
-//             margin: 0 auto;
-//             width: 300px;
-//         }
+        /* Added footer p style */
+        .footer p {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            margin: 0; /* Reset default margin */
+        }
 
-//         /* Added footer p style */
-//         .footer p {
-//             display: inline-block;
-//             background-color: var(--primary-light);
-//             color: var(--primary-dark);
-//             padding: 8px 20px;
-//             border-radius: 20px;
-//             box-shadow: 0 2px 4px var(--shadow-color);
-//             margin: 0; /* Reset default margin */
-//         }
+        /* Badge styles */
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            gap: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
 
-//         /* Badge styles */
-//         .icon-badge {
-//             display: inline-flex;
-//             align-items: center;
-//             padding: 4px 10px;
-//             border-radius: 12px;
-//             font-size: 0.85em;
-//             font-weight: 600;
-//             gap: 4px;
-//             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-//         }
+        .icon-badge-text {
+            margin-left: 4px;
+        }
 
-//         .icon-badge-text {
-//             margin-left: 4px;
-//         }
+        .icon-badge-true {
+            background-color: var(--badge-success-bg);
+            color: var(--badge-success-text);
+            border: 1px solid rgba(30, 142, 62, 0.2);
+        }
 
-//         .icon-badge-true {
-//             background-color: var(--badge-success-bg);
-//             color: var(--badge-success-text);
-//             border: 1px solid rgba(30, 142, 62, 0.2);
-//         }
+        .icon-badge-false {
+            background-color: var(--badge-error-bg);
+            color: var(--badge-error-text);
+            border: 1px solid rgba(217, 48, 37, 0.2);
+        }
 
-//         .icon-badge-false {
-//             background-color: var(--badge-error-bg);
-//             color: var(--badge-error-text);
-//             border: 1px solid rgba(217, 48, 37, 0.2);
-//         }
+        .icon-badge-backward {
+            background-color: var(--badge-warning-bg);
+            color: var(--badge-warning-text);
+            border: 1px solid rgba(245, 124, 0, 0.2);
+        }
 
-//         .icon-badge-backward {
-//             background-color: var(--badge-warning-bg);
-//             color: var(--badge-warning-text);
-//             border: 1px solid rgba(245, 124, 0, 0.2);
-//         }
+        .icon-badge-forward {
+            background-color: var(--badge-info-bg);
+            color: var(--badge-info-text);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+        }
 
-//         .icon-badge-forward {
-//             background-color: var(--badge-info-bg);
-//             color: var(--badge-info-text);
-//             border: 1px solid rgba(26, 115, 232, 0.2);
-//         }
+        .icon-badge-full {
+            background-color: var(--badge-type-bg);
+            color: var(--badge-type-text);
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
 
-//         .icon-badge-full {
-//             background-color: var(--badge-type-bg);
-//             color: var(--badge-type-text);
-//             border: 1px solid rgba(156, 39, 176, 0.2);
-//         }
+        .icon-badge-type {
+            background-color: var(--badge-type-bg);
+            color: var(--badge-type-text);
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
 
-//         .icon-badge-type {
-//             background-color: var(--badge-type-bg);
-//             color: var(--badge-type-text);
-//             border: 1px solid rgba(156, 39, 176, 0.2);
-//         }
+        .icon-badge-none {
+            background-color: var(--badge-neutral-bg);
+            color: var(--badge-neutral-text);
+            border: 1px solid rgba(95, 99, 104, 0.2);
+        }
 
-//         .icon-badge-none {
-//             background-color: var(--badge-neutral-bg);
-//             color: var(--badge-neutral-text);
-//             border: 1px solid rgba(95, 99, 104, 0.2);
-//         }
+        .icon-badge-warning {
+            background-color: var(--badge-warning-bg);
+            color: var(--badge-warning-text);
+            border: 1px solid rgba(245, 124, 0, 0.2);
+        }
 
-//         .icon-badge-warning {
-//             background-color: var(--badge-warning-bg);
-//             color: var(--badge-warning-text);
-//             border: 1px solid rgba(245, 124, 0, 0.2);
-//         }
+        .icon-badge-subject {
+            background-color: var(--badge-info-bg);
+            color: var(--badge-info-text);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+        }
 
-//         .icon-badge-subject {
-//             background-color: var(--badge-info-bg);
-//             color: var(--badge-info-text);
-//             border: 1px solid rgba(26, 115, 232, 0.2);
-//         }
+        .icon-badge-version {
+            background-color: var(--badge-type-bg);
+            color: var(--badge-type-text);
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
 
-//         .icon-badge-version {
-//             background-color: var(--badge-type-bg);
-//             color: var(--badge-type-text);
-//             border: 1px solid rgba(156, 39, 176, 0.2);
-//         }
+        .icon-badge-id {
+            background-color: var(--badge-neutral-bg);
+            color: var(--badge-neutral-text);
+            border: 1px solid rgba(95, 99, 104, 0.2);
+        }
+        .slack-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
 
-//         .icon-badge-id {
-//             background-color: var(--badge-neutral-bg);
-//             color: var(--badge-neutral-text);
-//             border: 1px solid rgba(95, 99, 104, 0.2);
-//         }
-//     </style>
-// </head>
-// <body>
-//     <div class="header-container">
-//         <a href="/schema/?topic={{.SubjectName}}" class="back-button">Back to Schema View</a>
-//         <h1>Kafka Schema Dashboard ✨</h1>
-//         <div class="header-stats">
-//             <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
-//             <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
-//         </div>
-//     </div>
+        .slack-button:hover {
+            transform: scale(1.05);
+        }
 
-//     <div class="test-container">
-//         <div class="info-section">
-//             <div class="info-item">
-//                 <span class="info-label">Subject:</span>
-//                 <span class="icon-badge icon-badge-subject">📋 {{.SubjectName}}</span>
-//             </div>
-//             <div class="info-item">
-//                 <span class="info-label">Version:</span>
-//                 <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
-//             </div>
-//             <div class="info-item">
-//                 <span class="info-label">ID:</span>
-//                 <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
-//             </div>
-//         </div>
+        .slack-button img {
+            height: 40px;
+        }
+        .github-button {
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
 
-//         <div class="test-form">
-//             <label for="testJson" class="test-json-label">
-//                 <span class="property-label">Enter JSON to test compatibility 📝</span>
-//             </label>
-//             <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
-//             <button id="testButton" class="submit-button">Test Compatibility</button>
-//         </div>
+        .github-button:hover {
+            transform: scale(1.05);
+        }
 
-//         <div id="resultContainer" class="result-container">
-//             <div class="result-title">Compatibility Test Results 📊</div>
-//             <div class="result-item">
-//                 <span class="result-label">Compatibility:</span>
-//                 <span id="compatibilityResult"></span>
-//             </div>
-//             <div class="result-item">
-//                 <span class="result-label">HTTP Status:</span>
-//                 <span id="statusResult"></span>
-//             </div>
-//             <div class="result-item">
-//                 <span class="result-label">Error Code:</span>
-//                 <span id="errorCodeResult"></span>
-//             </div>
-//             <div class="result-item">
-//                 <span class="result-label">Message:</span>
-//                 <span id="messageResult"></span>
-//             </div>
-//         </div>
-//     </div>
+        .github-button img {
+            height: 40px;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <a href="/schema/?topic={{.SubjectName}}" class="back-button">Back to Schema View</a>
+        <h1>Kafka Schema Dashboard ✨</h1>
+        <div class="header-stats">
+            <a href="https://slack.com" target="_blank" class="slack-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🔗 Slack</a>
+            <a href="https://www.lemonde.fr" target="_blank" class="github-button" style="padding: 8px 20px; cursor: pointer; transition: all 0.3s ease; display: inline-block; background-color: #e8f2f9; color: #357abd; border-radius: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-decoration: none; font-weight: 600; margin: 0 5px;">🐙 GitHub</a>
+        </div>
+    </div>
 
-//     <div class="footer">
-//         <p>🚀 Global Commerce - Vidar</p>
-//     </div>
+    <div class="test-container">
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Subject:</span>
+                <span class="icon-badge icon-badge-subject">📋 {{.SubjectName}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Version:</span>
+                <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ID:</span>
+                <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
+            </div>
+        </div>
 
-//     <script>
-//         document.getElementById('testButton').addEventListener('click', testSchema);
+        <div class="test-form">
+            <label for="testJson" class="test-json-label">
+                <span class="property-label">Enter JSON to test compatibility 📝</span>
+            </label>
+            <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
+            <button id="testButton" class="submit-button">Test Compatibility</button>
+        </div>
 
-//         function testSchema() {
-//             const testJsonText = document.getElementById('testJson').value;
-//             const subject = "{{.SubjectName}}";
-//             const version = "{{.Version}}";
-//             const id = "{{.SchemaID}}";
+        <div id="resultContainer" class="result-container">
+            <div class="result-title">Compatibility Test Results 📊</div>
+            <div class="result-item">
+                <span class="result-label">Compatibility:</span>
+                <span id="compatibilityResult"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">HTTP Status:</span>
+                <span id="statusResult"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Error Code:</span>
+                <span id="errorCodeResult"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Message:</span>
+                <span id="messageResult"></span>
+            </div>
+        </div>
+    </div>
 
-//             // Show loading state
-//             const testButton = document.getElementById('testButton');
-//             const originalButtonText = testButton.textContent;
-//             testButton.textContent = 'Testing...';
-//             testButton.disabled = true;
+    <div class="footer">
+        <p>🚀 Global Commerce - Vidar</p>
+    </div>
 
-//             fetch('/test-schema', {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json'
-//                 },
-//                 body: JSON.stringify({
-//                     subject: subject,
-//                     version: version,
-//                     id: id,
-//                     json: testJsonText
-//                 })
-//             })
-//             .then(response => response.json())
-//             .then(data => {
-//                 // Reset button
-//                 testButton.textContent = originalButtonText;
-//                 testButton.disabled = false;
+    <script>
+        document.getElementById('testButton').addEventListener('click', testSchema);
 
-//                 // Determine badge classes based on response values
-//                 let compatibilityBadgeClass = "icon-badge-none";
-//                 if (data.isCompatible === true) {
-//                     compatibilityBadgeClass = "icon-badge-true";
-//                 } else if (data.isCompatible === false) {
-//                     compatibilityBadgeClass = "icon-badge-false";
-//                 } else {
-//                     compatibilityBadgeClass = "icon-badge-warning";
-//                 }
+        function testSchema() {
+            const testJsonText = document.getElementById('testJson').value;
+            const subject = "{{.SubjectName}}";
+            const version = "{{.Version}}";
+            const id = "{{.SchemaID}}";
 
-//                 let statusBadgeClass = "icon-badge-none";
-//                 if (data.httpStatus >= 400) {
-//                     statusBadgeClass = "icon-badge-false";
-//                 } else if (data.httpStatus >= 300) {
-//                     statusBadgeClass = "icon-badge-warning";
-//                 } else if (data.httpStatus >= 200) {
-//                     statusBadgeClass = "icon-badge-true";
-//                 }
+            // Show loading state
+            const testButton = document.getElementById('testButton');
+            const originalButtonText = testButton.textContent;
+            testButton.textContent = 'Testing...';
+            testButton.disabled = true;
 
-//                 let errorBadgeClass = "icon-badge-none";
-//                 if (data.errorCode > 0) {
-//                     errorBadgeClass = "icon-badge-false";
-//                 }
+            fetch('/test-schema', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    subject: subject,
+                    version: version,
+                    id: id,
+                    json: testJsonText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button
+                testButton.textContent = originalButtonText;
+                testButton.disabled = false;
 
-//                 let messageBadgeClass = "icon-badge-none";
-//                 if (data.message && data.message !== "None") {
-//                     if (data.isCompatible === false) {
-//                         messageBadgeClass = "icon-badge-false";
-//                     } else if (data.isCompatible === true) {
-//                         messageBadgeClass = "icon-badge-true";
-//                     }
-//                 }
+                // Determine badge classes based on response values
+                let compatibilityBadgeClass = "icon-badge-none";
+                if (data.isCompatible === true) {
+                    compatibilityBadgeClass = "icon-badge-true";
+                } else if (data.isCompatible === false) {
+                    compatibilityBadgeClass = "icon-badge-false";
+                } else {
+                    compatibilityBadgeClass = "icon-badge-warning";
+                }
 
-//                 // Update the result display
-//                 document.getElementById('compatibilityResult').innerHTML =
-//                     '<span class="icon-badge ' + compatibilityBadgeClass + '">' + (data.isCompatible === true ? 'Compatible' : data.isCompatible === false ? 'Not Compatible' : 'Unknown') + '</span>';
+                let statusBadgeClass = "icon-badge-none";
+                if (data.httpStatus >= 400) {
+                    statusBadgeClass = "icon-badge-false";
+                } else if (data.httpStatus >= 300) {
+                    statusBadgeClass = "icon-badge-warning";
+                } else if (data.httpStatus >= 200) {
+                    statusBadgeClass = "icon-badge-true";
+                }
 
-//                 document.getElementById('statusResult').innerHTML =
-//                     '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+                let errorBadgeClass = "icon-badge-none";
+                if (data.errorCode > 0) {
+                    errorBadgeClass = "icon-badge-false";
+                }
 
-//                 document.getElementById('errorCodeResult').innerHTML =
-//                     '<span class="icon-badge ' + errorBadgeClass + '">' + (data.errorCode === 0 ? 'None' : data.errorCode) + '</span>';
+                let messageBadgeClass = "icon-badge-none";
+                if (data.message && data.message !== "None") {
+                    if (data.isCompatible === false) {
+                        messageBadgeClass = "icon-badge-false";
+                    } else if (data.isCompatible === true) {
+                        messageBadgeClass = "icon-badge-true";
+                    }
+                }
 
-//                 document.getElementById('messageResult').innerHTML =
-//                     '<span class="icon-badge ' + messageBadgeClass + '">' + (data.message && data.message !== "None" ? data.message : 'None') + '</span>';
+                // Update the result display
+                document.getElementById('compatibilityResult').innerHTML = 
+                    '<span class="icon-badge ' + compatibilityBadgeClass + '">' + (data.isCompatible === true ? 'Compatible' : data.isCompatible === false ? 'Not Compatible' : 'Unknown') + '</span>';
+                
+                document.getElementById('statusResult').innerHTML = 
+                    '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+                
+                document.getElementById('errorCodeResult').innerHTML = 
+                    '<span class="icon-badge ' + errorBadgeClass + '">' + (data.errorCode === 0 ? 'None' : data.errorCode) + '</span>';
+                
+                document.getElementById('messageResult').innerHTML = 
+                    '<span class="icon-badge ' + messageBadgeClass + '">' + (data.message && data.message !== "None" ? data.message : 'None') + '</span>';
 
-//                 // Show the result container
-//                 document.getElementById('resultContainer').style.display = 'block';
-//             })
-//             .catch(error => {
-//                 // Reset button
-//                 testButton.textContent = originalButtonText;
-//                 testButton.disabled = false;
-
-//                 // Show error in the result container
-//                 document.getElementById('compatibilityResult').innerHTML =
-//                     '<span class="icon-badge icon-badge-false">Error</span>';
-
-//                 document.getElementById('statusResult').innerHTML =
-//                     '<span class="icon-badge icon-badge-false">Error</span>';
-
-//                 document.getElementById('errorCodeResult').innerHTML =
-//                     '<span class="icon-badge icon-badge-false">API Error</span>';
-
-//                 document.getElementById('messageResult').innerHTML =
-//                     '<span class="icon-badge icon-badge-false">' + (error.message || 'Failed to test schema') + '</span>';
-
-//                 // Show the result container
-//                 document.getElementById('resultContainer').style.display = 'block';
-//             });
-//         }
-//     </script>
-// </body>
-// </html>`
+                // Show the result container
+                document.getElementById('resultContainer').style.display = 'block';
+            })
+            .catch(error => {
+                // Reset button
+                testButton.textContent = originalButtonText;
+                testButton.disabled = false;
+                
+                // Show error in the result container
+                document.getElementById('compatibilityResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">Error</span>';
+                
+                document.getElementById('statusResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">Error</span>';
+                
+                document.getElementById('errorCodeResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">API Error</span>';
+                
+                document.getElementById('messageResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">' + (error.message || 'Failed to test schema') + '</span>';
+                
+                // Show the result container
+                document.getElementById('resultContainer').style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>`

@@ -315,7 +315,7 @@
                 <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this schema</button>
             </div>
             <div class="right-button">
-                <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this payload</button>
+                <button class="test-button" onclick="handleValidatePayload()">Test against this payload</button>
             </div>
         </div>
         <div class="property">
@@ -353,6 +353,10 @@
             window.location.href = '/test-schema/?topic=' + encodeURIComponent(subjectName) + 
                                  '&version=' + encodeURIComponent(version) + 
                                  '&id=' + encodeURIComponent(id);
+        }
+        function handleValidatePayload() {
+            console.log("handleValidatePayload called");
+            window.location.href = '/validate-payload';
         }
     </script>
 </body>

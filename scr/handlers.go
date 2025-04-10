@@ -307,3 +307,10 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 	log.Printf("API Schema test result: isCompatible=%t, httpStatus=%d, errorCode=%d, message=%s",
 		isCompatible, statusCode, errorCode, message)
 }
+
+func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
+	log.Print("handleValidatePayload called")
+	t := template.Must(template.New("validate-payload").Parse(testPayloadchemaTemplate))
+
+	t.Execute(w, nil)
+}
