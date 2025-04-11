@@ -1142,9 +1142,6 @@ var schemaTemplate string = `<!DOCTYPE html>
             <div class="left-button">
                 <button class="test-button" onclick="testSchema('{{$.SubjectName}}', {{.Version}}, {{.Id}})">Test against this schema</button>
             </div>
-            <div class="right-button">
-                <button class="test-button" onclick="handleValidatePayload(this)">Test against this payload</button>
-            </div>
         </div>
         <div class="property">
             <span class="property-label">Version:</span>
@@ -1182,18 +1179,6 @@ var schemaTemplate string = `<!DOCTYPE html>
                                  '&version=' + encodeURIComponent(version) + 
                                  '&id=' + encodeURIComponent(id);
         }
-        function handleValidatePayload(buttonElement) {
-        // Find the schema content within the same schema-card
-        const schemaCard = buttonElement.closest('.schema-card');
-        const schemaPre = schemaCard.querySelector('.schema-content pre');
-        const schemaContent = schemaPre.textContent;
-        
-        console.log("handleValidatePayload called with schema:", schemaContent);
-        sessionStorage.setItem('schemaToValidate', schemaContent);
-        sessionStorage.setItem('topicName', '{{$.SubjectName}}');  // Store the topic name
-        window.location.href = '/validate-payload';
-    }
-
     </script>
 </body>
 </html>`
