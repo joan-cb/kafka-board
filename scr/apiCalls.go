@@ -224,7 +224,7 @@ func getSchemas(subjectName string) ([]Schema, error) {
 			filteredSchemas = append(filteredSchemas, schema)
 		}
 	}
-	log.Printf("Schemas returned by getSchema: %v", filteredSchemas)
+	log.Printf("Schemas returned by getSchemas: %v", filteredSchemas)
 	return filteredSchemas, nil
 }
 
@@ -276,4 +276,40 @@ func testSchema(subjectName string, version int, testJSON string) (bool, int, st
 
 	// Return the dereferenced bool value
 	return *response.IsCompatible, response.HttpStatus, response.Message, nil
+}
+
+func getSchema(id string) (Schema, error) {
+
+	schema := Schema{}
+
+	client := &http.Client{}
+	url := baseRegistryURL + "/schemas/ids/" + id
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return schema, fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return schema, fmt.Errorf("error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return schema, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return schema, fmt.Errorf("error reading response: %v", err)
+	}
+
+	if err := json.Unmarshal(body, &schema); err != nil {
+		return schema, fmt.Errorf("error parsing JSON: %v", err)
+	}
+
+	log.Printf("Schema returned by getSchema: %v", schema)
+	return schema, nil
 }

@@ -423,6 +423,8 @@
         console.log("onload function called");
         const schema = sessionStorage.getItem('schemaToValidate');
         const topicName = sessionStorage.getItem('topicName');
+        console.log("topicName retrieved");
+        console.log(topicName);
             // Update the back button href if we have a topic name
         if (topicName) {
             const backButton = document.querySelector('.back-button');

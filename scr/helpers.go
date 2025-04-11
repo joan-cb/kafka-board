@@ -203,3 +203,25 @@ func setDefault(s *schemaRegistryResponse) {
 	s.Message = ""
 	s.HttpStatus = 0
 }
+
+func sendJSONResponse(w http.ResponseWriter, statusCode int, msg string) {
+	// Set content type header
+	w.Header().Set("Content-Type", "application/json")
+
+	// Set the status code
+	w.WriteHeader(statusCode)
+
+	// Create response structure
+	response := map[string]interface{}{
+		"isValid":    statusCode >= 200 && statusCode < 300,
+		"httpStatus": statusCode,
+		"message":    msg,
+	}
+	// Encode and send the response
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		// If encoding fails, send a simple error
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}

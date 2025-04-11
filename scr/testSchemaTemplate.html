@@ -359,6 +359,18 @@
             height: 40px;
             width: auto;
         }
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        /* Override the existing submit-button margin/alignment */
+        .submit-button {
+            margin: 0;
+            align-self: auto;
+        }
     </style>
 </head>
 <body>
@@ -372,25 +384,30 @@
     </div>
 
     <div class="test-container">
-        <!-- Add a hidden input to store the schema -->
-        <input type="hidden" id="schemaInput">
-        
-        <!-- Optionally display the schema -->
         <div class="info-section">
             <div class="info-item">
-                <span class="info-label">Schema:</span>
-                <div id="schemaDisplay" class="schema-content">
-                    <pre></pre>
-                </div>
+                <span class="info-label">Subject:</span>
+                <span class="icon-badge icon-badge-subject">📋 {{.SubjectName}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Version:</span>
+                <span class="icon-badge icon-badge-version">🔢 {{.Version}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ID:</span>
+                <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
             </div>
         </div>
 
-        <div class="test-form">
+        <<div class="test-form">
             <label for="testJson" class="test-json-label">
-                <span class="property-label">Enter JSON to validate against the schema 📝</span>
+                <span class="property-label">Enter JSON to test compatibility 📝</span>
             </label>
             <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
-            <button onclick="validateAgainstSchema()" class="submit-button">Validate</button>
+            <div class="buttons-container">
+                <button id="testButton" class="submit-button">Test compatibility of new schema against this schema</button>
+                <button id="testButton2" class="submit-button">Test compatibility of payload against this schema</button>
+            </div>
         </div>
 
         <div id="resultContainer" class="result-container">
@@ -419,92 +436,177 @@
     </div>
 
     <script>
-       window.onload = function() {
-    console.log("onload function called);
-    const schema = sessionStorage.getItem('schemaToValidate');
-    if (schema) {
-        console.log("Retrieved schema:", schema);
-        // Format the JSON before displaying
-        try {
-            const formattedSchema = JSON.stringify(JSON.parse(schema), null, 4);
-            document.getElementById('schemaDisplay').querySelector('pre').innerHTML = formattedSchema;
-            document.getElementById('schemaInput').value = schema;
-        } catch (e) {
-            console.error("Error formatting schema:", e);
-            document.getElementById('schemaDisplay').querySelector('pre').innerHTML = schema;
-            document.getElementById('schemaInput').value = schema;
+        document.getElementById('testButton').addEventListener('click', testSchema);
+        document.getElementById('testButton2').addEventListener('click', testPayload);
+        
+        function testPayload() {
+            const testJsonText = document.getElementById('testJson').value;
+            const id = "{{.SchemaID}}";
+            
+            console.log("Raw textarea value:", testJsonText);
+            const url = '/test-payload?id=' + encodeURIComponent(id);            
+            console.log(url);
+            
+            const requestBody = JSON.stringify({
+                payload: testJsonText
+            });
+            console.log("Request body being sent:", requestBody);
+            
+            const testButton2 = document.getElementById('testButton2');
+            const originalButtonText = testButton2.textContent;
+            testButton2.textContent = 'Testing...';
+            testButton2.disabled = true;
+        
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: requestBody
+            })
+            .then(response => {
+                console.log("Raw response:", response);
+                // Check if response is ok (status in the range 200-299)
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ${response.status}');
+                }
+                // First try to get the text of the response
+                return response.text().then(text => {
+                    console.log("Response text:", text);
+                    // If we have text, try to parse it as JSON
+                    if (text) {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error("JSON parse error:", e);
+                            throw new Error("Invalid JSON response");
+                        }
+                    } else {
+                        throw new Error("Empty response");
+                    }
+                });
+            })
+            .then(data => {
+                console.log("Parsed response data:", data);
+                testButton2.textContent = originalButtonText;
+                testButton2.disabled = false;
+                displayValidationResult(data);
+            })
+            .catch(error => {
+                console.error("Error occurred:", error);
+                testButton2.textContent = originalButtonText;
+                testButton2.disabled = false;
+                
+                displayValidationResult({
+                    isValid: false,
+                    httpStatus: 500,
+                    errorCode: "ERROR",
+                    message: error.message || "Failed to test payload"
+                });
+            });
         }
-        sessionStorage.removeItem('schemaToValidate');
-    }
-};
 
-function validateAgainstSchema() {
-    const payload = document.getElementById('testJson').value;
-    const schema = document.getElementById('schemaInput').value;
-    
-    // Show loading state
-    const submitButton = document.querySelector('.submit-button');
-    const originalButtonText = submitButton.textContent;
-    submitButton.textContent = 'Validating...';
-    submitButton.disabled = true;
-    
-    fetch('/validate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            schema: schema,
-            payload: payload
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Validation result:", data);
-        displayValidationResult(data);
-    })
-    .catch(error => {
-        console.error("Error validating:", error);
-        displayValidationResult({
-            isValid: false,
-            httpStatus: 500,
-            errorCode: "ERROR",
-            message: error.message || "Failed to validate schema"
-        });
-    })
-    .finally(() => {
-        // Reset button state
-        submitButton.textContent = originalButtonText;
-        submitButton.disabled = false;
-    });
-}
+        function testSchema() {
+            const testJsonText = document.getElementById('testJson').value;
+            const subject = "{{.SubjectName}}";
+            const version = "{{.Version}}";
+            const id = "{{.SchemaID}}";
 
-    function displayValidationResult(result) {
-        const resultContainer = document.getElementById('resultContainer');
-        
-        // Determine badge classes based on validation result
-        const validityBadgeClass = result.isValid ? "icon-badge-true" : "icon-badge-false";
-        const validityText = result.isValid ? "Valid" : "Invalid";
-        
-        const statusBadgeClass = result.httpStatus < 400 ? "icon-badge-true" : "icon-badge-false";
-        const errorBadgeClass = result.errorCode ? "icon-badge-false" : "icon-badge-true";
-        
-        // Update all result elements
-        document.getElementById('compatibilityResult').innerHTML = 
-            '<span class="icon-badge ' + validityBadgeClass + '">' + validityText + '</span>';
-        
-        document.getElementById('statusResult').innerHTML = 
-            '<span class="icon-badge ' + statusBadgeClass + '">' + (result.httpStatus || 'N/A') + '</span>';
-        
-        document.getElementById('errorCodeResult').innerHTML = 
-            '<span class="icon-badge ' + errorBadgeClass + '">' + (result.errorCode || 'None') + '</span>';
-        
-        document.getElementById('messageResult').innerHTML = 
-            '<span class="icon-badge ' + validityBadgeClass + '">' + (result.message || 'No message') + '</span>';
-        
-        // Show the result container
-        resultContainer.style.display = 'block';
-    }
+            // Show loading state
+            const testButton = document.getElementById('testButton');
+            const originalButtonText = testButton.textContent;
+            testButton.textContent = 'Testing...';
+            testButton.disabled = true;
+
+            fetch('/test-schema', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    subject: subject,
+                    version: version,
+                    id: id,
+                    json: testJsonText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button
+                testButton.textContent = originalButtonText;
+                testButton.disabled = false;
+
+                // Determine badge classes based on response values
+                let compatibilityBadgeClass = "icon-badge-none";
+                if (data.isCompatible === true) {
+                    compatibilityBadgeClass = "icon-badge-true";
+                } else if (data.isCompatible === false) {
+                    compatibilityBadgeClass = "icon-badge-false";
+                } else {
+                    compatibilityBadgeClass = "icon-badge-warning";
+                }
+
+                let statusBadgeClass = "icon-badge-none";
+                if (data.httpStatus >= 400) {
+                    statusBadgeClass = "icon-badge-false";
+                } else if (data.httpStatus >= 300) {
+                    statusBadgeClass = "icon-badge-warning";
+                } else if (data.httpStatus >= 200) {
+                    statusBadgeClass = "icon-badge-true";
+                }
+
+                let errorBadgeClass = "icon-badge-none";
+                if (data.errorCode > 0) {
+                    errorBadgeClass = "icon-badge-false";
+                }
+
+                let messageBadgeClass = "icon-badge-none";
+                if (data.message && data.message !== "None") {
+                    if (data.isCompatible === false) {
+                        messageBadgeClass = "icon-badge-false";
+                    } else if (data.isCompatible === true) {
+                        messageBadgeClass = "icon-badge-true";
+                    }
+                }
+
+                // Update the result display
+                document.getElementById('compatibilityResult').innerHTML = 
+                    '<span class="icon-badge ' + compatibilityBadgeClass + '">' + (data.isCompatible === true ? 'Compatible' : data.isCompatible === false ? 'Not Compatible' : 'Unknown') + '</span>';
+                
+                document.getElementById('statusResult').innerHTML = 
+                    '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+                
+                document.getElementById('errorCodeResult').innerHTML = 
+                    '<span class="icon-badge ' + errorBadgeClass + '">' + (data.errorCode === 0 ? 'None' : data.errorCode) + '</span>';
+                
+                document.getElementById('messageResult').innerHTML = 
+                    '<span class="icon-badge ' + messageBadgeClass + '">' + (data.message && data.message !== "None" ? data.message : 'None') + '</span>';
+
+                // Show the result container
+                document.getElementById('resultContainer').style.display = 'block';
+            })
+            .catch(error => {
+                // Reset button
+                testButton.textContent = originalButtonText;
+                testButton.disabled = false;
+                
+                // Show error in the result container
+                document.getElementById('compatibilityResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">Error</span>';
+                
+                document.getElementById('statusResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">Error</span>';
+                
+                document.getElementById('errorCodeResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">API Error</span>';
+                
+                document.getElementById('messageResult').innerHTML = 
+                    '<span class="icon-badge icon-badge-false">' + (error.message || 'Failed to test schema') + '</span>';
+                
+                // Show the result container
+                document.getElementById('resultContainer').style.display = 'block';
+            });
+        }
     </script>
 </body>
 </html>

@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
@@ -310,19 +312,90 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 
 func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	log.Print("handleValidatePayload called")
+	id := r.URL.Query().Get("id")
+	log.Printf("Param retrieved from query ->> ID %s", id)
 
-	// Create a data structure to pass to the template
-	data := struct {
-		SubjectName string
-	}{
-		SubjectName: r.URL.Query().Get("topic"),
-	}
-
-	// Use the correct template name
-	t := template.Must(template.New("validate-payload").Parse(testPayloadSchemaTemplate))
-	if err := t.Execute(w, data); err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
+	// Read and validate request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		sendJSONResponse(w, http.StatusBadRequest, "Error reading request body")
 		return
 	}
+
+	var unmarshalledBody map[string]any
+	if err := json.Unmarshal(body, &unmarshalledBody); err != nil {
+		log.Printf("Invalid JSON in request body: %v", err)
+		sendJSONResponse(w, http.StatusBadRequest, "Invalid JSON format in request body")
+		return
+	}
+
+	payloadRaw, ok := unmarshalledBody["payload"]
+	if !ok {
+		log.Print("no payload key provided")
+		sendJSONResponse(w, http.StatusBadRequest, "payload key expected in request body")
+		return
+	}
+
+	// If payload is a string, try to parse it as JSON
+	var payload interface{}
+	if payloadStr, isString := payloadRaw.(string); isString {
+		if err := json.Unmarshal([]byte(payloadStr), &payload); err != nil {
+			log.Printf("Invalid JSON in payload string: %v", err)
+			sendJSONResponse(w, http.StatusBadRequest, "Invalid JSON in payload string")
+			return
+		}
+	} else {
+		// If it's already a JSON object, use it directly
+		payload = payloadRaw
+	}
+
+	// Get the schema
+	schema, err := getSchema(id)
+	if err != nil {
+		log.Printf("Error retrieving schema: %v", err)
+		sendJSONResponse(w, http.StatusInternalServerError, "Error retrieving schema")
+		return
+	}
+
+	// Create schema loader
+	schemaLoader := gojsonschema.NewStringLoader(schema.Schema)
+	documentLoader := gojsonschema.NewGoLoader(payload)
+
+	// Perform validation
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		log.Printf("Error during schema validation: %v", err)
+		sendJSONResponse(w, http.StatusInternalServerError, "Error validating against schema")
+		return
+	}
+
+	// Check validation result
+	if !result.Valid() {
+		// Collect validation errors
+		var errorMessages []string
+		for _, err := range result.Errors() {
+			errorMessages = append(errorMessages, err.String())
+		}
+
+		response := map[string]interface{}{
+			"isValid":    false,
+			"httpStatus": http.StatusOK,
+			"errorCode":  "SCHEMA_VALIDATION_FAILED",
+			"message":    strings.Join(errorMessages, "; "),
+		}
+		log.Print(response)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// If we get here, validation passed
+	response := map[string]interface{}{
+		"isValid":    true,
+		"httpStatus": http.StatusOK,
+		"errorCode":  "SCHEMA_VALIDATION_SUCCESS",
+	}
+	log.Print(response)
+	sendJSONResponse(w, http.StatusOK, "Payload validates against schema")
 }
