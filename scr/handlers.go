@@ -151,10 +151,12 @@ func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 		SubjectName string
 		Version     string
 		SchemaID    string
+		Schema      string
 	}{
 		SubjectName: subjectName,
 		Version:     version,
 		SchemaID:    id,
+		Schema:      targetSchema.Schema,
 	}
 	t.Execute(w, data)
 }

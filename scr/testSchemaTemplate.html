@@ -371,6 +371,58 @@
             margin: 0;
             align-self: auto;
         }
+        .schema-content {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 0 15px;
+            width: calc(100% - 30px);
+            box-sizing: border-box;
+        }
+        
+        .schema-content pre {
+            margin: 0;
+            padding: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .property-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Alignment for schema content */
+        .property:has(.schema-content) {
+            align-items: flex-start;
+        }
+        
+        .property:has(.schema-content) .property-label {
+            margin-top: 0;
+        }
+        .property-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            min-width: 150px;
+            padding: 5px 10px;
+            background-color: var(--primary-light);
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-top: 0;
+        }
+        
+        .property {
+            margin: 12px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+        }
     </style>
 </head>
 <body>
@@ -398,18 +450,22 @@
                 <span class="icon-badge icon-badge-id">🆔 {{.SchemaID}}</span>
             </div>
         </div>
-
-        <<div class="test-form">
-            <label for="testJson" class="test-json-label">
+        <div class="property" style="width: 100%">
+            <span class="property-label">Schema:</span>
+            <div class="schema-content">
+                <pre>{{.Schema | formatJSON | html}}</pre>
+            </div>
+        </div>
+        <div class="test-form">
+            <div class="property" style="width: 100%; margin-bottom: 10px;">
                 <span class="property-label">Enter JSON to test compatibility 📝</span>
-            </label>
+            </div>
             <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
             <div class="buttons-container">
                 <button id="testButton" class="submit-button">Test compatibility of new schema against this schema</button>
                 <button id="testButton2" class="submit-button">Test compatibility of payload against this schema</button>
             </div>
         </div>
-
         <div id="resultContainer" class="result-container">
             <div class="result-title">Compatibility Test Results 📊</div>
             <div class="result-item">
