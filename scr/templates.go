@@ -1642,7 +1642,10 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             </div>
         </div>
         <div class="test-form">
-            <textarea id="testJson" placeholder="Paste your JSON here... You can either test the compatibility of a new schema against this schema, or the compatibility of a payload against this schema   "></textarea>
+            <div class="property" style="width: 100%; margin-bottom: 10px;">
+                <span class="property-label">Enter JSON to test compatibility 📝</span>
+            </div>
+            <textarea id="testJson" placeholder="Paste your JSON here..."></textarea>
             <div class="buttons-container">
                 <button id="testButton" class="submit-button">Test compatibility of new schema against this schema</button>
                 <button id="testButton2" class="submit-button">Test compatibility of payload against this schema</button>
@@ -1674,8 +1677,88 @@ var testSchemaTemplate string = `<!DOCTYPE html>
     </div>
 
     <script>
-        document.getElementById('testButton').addEventListener('click', testSchema);
-        document.getElementById('testButton2').addEventListener('click', testPayload);
+        // Wait for DOM to be fully loaded before attaching event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('testButton').addEventListener('click', testSchema);
+            document.getElementById('testButton2').addEventListener('click', testPayload);
+        });
+        
+        // Shared function to display validation results for both schema and payload tests
+        function displayValidationResult(data) {
+            // Determine badge classes based on response values
+            let compatibilityBadgeClass = "icon-badge-none";
+            
+            // Handle both isCompatible (from schema testing) and isValid (from payload testing)
+            if (data.isCompatible === true || data.isValid === true) {
+                compatibilityBadgeClass = "icon-badge-true";
+            } else if (data.isCompatible === false || data.isValid === false) {
+                compatibilityBadgeClass = "icon-badge-false";
+            } else {
+                compatibilityBadgeClass = "icon-badge-warning";
+            }
+
+            let statusBadgeClass = "icon-badge-none";
+            if (data.httpStatus >= 400) {
+                statusBadgeClass = "icon-badge-false";
+            } else if (data.httpStatus >= 300) {
+                statusBadgeClass = "icon-badge-warning";
+            } else if (data.httpStatus >= 200) {
+                statusBadgeClass = "icon-badge-true";
+            }
+
+            let errorBadgeClass = "icon-badge-none";
+            // Handle both numeric and string error codes
+            if (typeof data.errorCode === 'number' && data.errorCode > 0) {
+                errorBadgeClass = "icon-badge-false";
+            } else if (typeof data.errorCode === 'string' && data.errorCode !== "SCHEMA_VALIDATION_SUCCESS") {
+                errorBadgeClass = "icon-badge-false";
+            } else if (data.errorCode === "SCHEMA_VALIDATION_SUCCESS") {
+                errorBadgeClass = "icon-badge-true";
+            }
+
+            let messageBadgeClass = "icon-badge-none";
+            if (data.message && data.message !== "None") {
+                if (data.isCompatible === false || data.isValid === false) {
+                    messageBadgeClass = "icon-badge-false";
+                } else if (data.isCompatible === true || data.isValid === true) {
+                    messageBadgeClass = "icon-badge-true";
+                }
+            }
+            
+            // Update the compatibility result with appropriate text based on test type
+            let compatText = 'Unknown';
+            if (data.isCompatible !== undefined) {
+                compatText = data.isCompatible === true ? 'Compatible' : 'Not Compatible';
+            } else if (data.isValid !== undefined) {
+                compatText = data.isValid === true ? 'Valid' : 'Not Valid';
+            }
+            
+            document.getElementById('compatibilityResult').innerHTML = 
+                '<span class="icon-badge ' + compatibilityBadgeClass + '">' + compatText + '</span>';
+            
+            // Update the HTTP status
+            document.getElementById('statusResult').innerHTML = 
+                '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+            
+            // Update the error code display
+            let errorDisplay = 'None';
+            if (typeof data.errorCode === 'number') {
+                errorDisplay = data.errorCode === 0 ? 'None' : data.errorCode;
+            } else if (typeof data.errorCode === 'string') {
+                errorDisplay = data.errorCode;
+            }
+            
+            document.getElementById('errorCodeResult').innerHTML = 
+                '<span class="icon-badge ' + errorBadgeClass + '">' + errorDisplay + '</span>';
+            
+            // Update the message
+            const messageDisplay = (data.message && data.message !== "None") ? data.message : 'None';
+            document.getElementById('messageResult').innerHTML = 
+                '<span class="icon-badge ' + messageBadgeClass + '">' + messageDisplay + '</span>';
+
+            // Show the result container
+            document.getElementById('resultContainer').style.display = 'block';
+        }
         
         function testPayload() {
             const testJsonText = document.getElementById('testJson').value;
@@ -1706,7 +1789,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
                 console.log("Raw response:", response);
                 // Check if response is ok (status in the range 200-299)
                 if (!response.ok) {
-                    throw new Error('HTTP error! status: ${response.status}');
+                    throw new Error('HTTP error! status: ' + response.status);
                 }
                 // First try to get the text of the response
                 return response.text().then(text => {
@@ -1728,6 +1811,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
                 console.log("Parsed response data:", data);
                 testButton2.textContent = originalButtonText;
                 testButton2.disabled = false;
+                // Use the shared displayValidationResult function
                 displayValidationResult(data);
             })
             .catch(error => {
@@ -1735,6 +1819,7 @@ var testSchemaTemplate string = `<!DOCTYPE html>
                 testButton2.textContent = originalButtonText;
                 testButton2.disabled = false;
                 
+                // Create error response and use shared display function
                 displayValidationResult({
                     isValid: false,
                     httpStatus: 500,
@@ -1773,76 +1858,22 @@ var testSchemaTemplate string = `<!DOCTYPE html>
                 // Reset button
                 testButton.textContent = originalButtonText;
                 testButton.disabled = false;
-
-                // Determine badge classes based on response values
-                let compatibilityBadgeClass = "icon-badge-none";
-                if (data.isCompatible === true) {
-                    compatibilityBadgeClass = "icon-badge-true";
-                } else if (data.isCompatible === false) {
-                    compatibilityBadgeClass = "icon-badge-false";
-                } else {
-                    compatibilityBadgeClass = "icon-badge-warning";
-                }
-
-                let statusBadgeClass = "icon-badge-none";
-                if (data.httpStatus >= 400) {
-                    statusBadgeClass = "icon-badge-false";
-                } else if (data.httpStatus >= 300) {
-                    statusBadgeClass = "icon-badge-warning";
-                } else if (data.httpStatus >= 200) {
-                    statusBadgeClass = "icon-badge-true";
-                }
-
-                let errorBadgeClass = "icon-badge-none";
-                if (data.errorCode > 0) {
-                    errorBadgeClass = "icon-badge-false";
-                }
-
-                let messageBadgeClass = "icon-badge-none";
-                if (data.message && data.message !== "None") {
-                    if (data.isCompatible === false) {
-                        messageBadgeClass = "icon-badge-false";
-                    } else if (data.isCompatible === true) {
-                        messageBadgeClass = "icon-badge-true";
-                    }
-                }
-
-                // Update the result display
-                document.getElementById('compatibilityResult').innerHTML = 
-                    '<span class="icon-badge ' + compatibilityBadgeClass + '">' + (data.isCompatible === true ? 'Compatible' : data.isCompatible === false ? 'Not Compatible' : 'Unknown') + '</span>';
                 
-                document.getElementById('statusResult').innerHTML = 
-                    '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
-                
-                document.getElementById('errorCodeResult').innerHTML = 
-                    '<span class="icon-badge ' + errorBadgeClass + '">' + (data.errorCode === 0 ? 'None' : data.errorCode) + '</span>';
-                
-                document.getElementById('messageResult').innerHTML = 
-                    '<span class="icon-badge ' + messageBadgeClass + '">' + (data.message && data.message !== "None" ? data.message : 'None') + '</span>';
-
-                // Show the result container
-                document.getElementById('resultContainer').style.display = 'block';
+                // Use the shared displayValidationResult function
+                displayValidationResult(data);
             })
             .catch(error => {
                 // Reset button
                 testButton.textContent = originalButtonText;
                 testButton.disabled = false;
                 
-                // Show error in the result container
-                document.getElementById('compatibilityResult').innerHTML = 
-                    '<span class="icon-badge icon-badge-false">Error</span>';
-                
-                document.getElementById('statusResult').innerHTML = 
-                    '<span class="icon-badge icon-badge-false">Error</span>';
-                
-                document.getElementById('errorCodeResult').innerHTML = 
-                    '<span class="icon-badge icon-badge-false">API Error</span>';
-                
-                document.getElementById('messageResult').innerHTML = 
-                    '<span class="icon-badge icon-badge-false">' + (error.message || 'Failed to test schema') + '</span>';
-                
-                // Show the result container
-                document.getElementById('resultContainer').style.display = 'block';
+                // Create error response and use shared display function
+                displayValidationResult({
+                    isCompatible: false,
+                    httpStatus: 500,
+                    errorCode: "ERROR",
+                    message: error.message || "Failed to test schema"
+                });
             });
         }
     </script>
