@@ -13,7 +13,8 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-func handleHome(w http.ResponseWriter, r *http.Request) {
+// Handle the home page load
+func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	// First get all subjects
 	subjects, err := returnSubjects()
 	if err != nil {
@@ -49,7 +50,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
-func handleSchema(w http.ResponseWriter, r *http.Request) {
+// Handle the schema page load
+func handleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 	if subjectName == "" {
 		http.Error(w, "Subject name is required", http.StatusBadRequest)
@@ -87,6 +89,7 @@ func handleSchema(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
+// Internal handler
 func handleTestSchema(w http.ResponseWriter, r *http.Request) {
 	// Route to appropriate handler based on HTTP method
 	switch r.Method {
@@ -99,6 +102,7 @@ func handleTestSchema(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Handle the test schema page load
 func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 	version := r.URL.Query().Get("version")
@@ -161,86 +165,8 @@ func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
+// Handle the test schema post request for testing the compatibility of a new schema against existing schema
 func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
-
-	subjectName := r.URL.Query().Get("topic")
-	version := r.URL.Query().Get("version")
-	id := r.URL.Query().Get("id")
-
-	if subjectName == "" || version == "" || id == "" {
-		log.Printf("Missing required parameters: subjectName=%s, version=%s, id=%s", subjectName, version, id)
-		http.Error(w, "Missing required parameters", http.StatusBadRequest)
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("Error reading request body: %v", err)
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
-		return
-	}
-
-	// Convert version to integer
-	versionInt, err := strconv.Atoi(version)
-	if err != nil {
-		log.Printf("Error converting version to integer: %v", err)
-		http.Error(w, "Invalid version number", http.StatusBadRequest)
-		return
-	}
-
-	log.Printf("Testing schema for subject: %s, version: %d, id: %s", subjectName, versionInt, id)
-	log.Printf("Body: %s", string(body))
-
-	// Test the schema
-	isCompatible, statusCode, message, err := testSchema(subjectName, versionInt, string(body))
-	if err != nil {
-		log.Printf("Error testing schema: %v", err)
-		http.Error(w, "Error testing schema", http.StatusInternalServerError)
-		return
-	}
-
-	// Check if the message indicates compatibility couldn't be determined
-	compatibilityDetermined := true
-	if statusCode != http.StatusOK &&
-		(statusCode == http.StatusInternalServerError ||
-			strings.Contains(message, "error parsing") ||
-			strings.Contains(message, "unexpected status")) {
-		compatibilityDetermined = false
-	}
-
-	// Determine error code based on status code
-	errorCode := 0
-	if statusCode >= 400 {
-		errorCode = statusCode
-	}
-
-	// Ensure message has a value
-	if message == "" {
-		message = "None"
-	}
-
-	// Prepare response
-	response := map[string]interface{}{
-		"is_compatible":            isCompatible,
-		"compatibility_determined": compatibilityDetermined,
-		"status_code":              statusCode,
-		"error_code":               errorCode,
-		"message":                  message,
-	}
-
-	// Set content type and encode response
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Error encoding response", http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("Schema test result: is_compatible=%t, compatibility_determined=%t, status_code=%d, error_code=%d, message=%s",
-		isCompatible, compatibilityDetermined, statusCode, errorCode, message)
-}
-
-func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
 	var requestData struct {
 		Subject string `json:"subject"`
@@ -252,14 +178,26 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		log.Printf("Error parsing JSON request: %v", err)
-		http.Error(w, "Invalid JSON request", http.StatusBadRequest)
+		response := createSchemaRegistryResponse(
+			false,
+			fmt.Sprintf("Invalid JSON request: %v", err),
+			http.StatusBadRequest,
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
 	// Validate required fields
 	if requestData.Subject == "" || requestData.Version == "" || requestData.Id == "" || requestData.JSON == "" {
 		log.Printf("Missing required fields in API request")
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		response := createSchemaRegistryResponse(
+			false,
+			"Missing required fields",
+			http.StatusBadRequest,
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -267,7 +205,13 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 	versionInt, err := strconv.Atoi(requestData.Version)
 	if err != nil {
 		log.Printf("Error converting version to integer: %v", err)
-		http.Error(w, "Invalid version number", http.StatusBadRequest)
+		response := createSchemaRegistryResponse(
+			false,
+			fmt.Sprintf("Invalid version number: %v", err),
+			http.StatusBadRequest,
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -277,7 +221,13 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 	isCompatible, statusCode, message, err := testSchema(requestData.Subject, versionInt, requestData.JSON)
 	if err != nil {
 		log.Printf("Error testing schema: %v", err)
-		http.Error(w, "Error testing schema", http.StatusInternalServerError)
+		response := createSchemaRegistryResponse(
+			false,
+			fmt.Sprintf("Error testing schema: %v", err),
+			http.StatusInternalServerError,
+			http.StatusInternalServerError,
+		)
+		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
@@ -292,50 +242,59 @@ func handleTestSchemaAPI(w http.ResponseWriter, r *http.Request) {
 		message = "None"
 	}
 
-	// Prepare response using camelCase to match frontend expectations
-	response := map[string]interface{}{
-		"isCompatible": isCompatible,
-		"httpStatus":   statusCode,
-		"errorCode":    errorCode,
-		"message":      message,
-	}
+	// Create response
+	response := createSchemaRegistryResponse(
+		isCompatible,
+		message,
+		statusCode,
+		errorCode,
+	)
 
-	// Set content type and encode response
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Error encoding response", http.StatusInternalServerError)
-		return
-	}
+	// Send JSON response
+	sendJSONResponse(w, statusCode, response)
 
 	log.Printf("API Schema test result: isCompatible=%t, httpStatus=%d, errorCode=%d, message=%s",
 		isCompatible, statusCode, errorCode, message)
 }
 
+// Called from the schema page to validate a payload against a schema
 func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
-	log.Print("handleValidatePayload called")
 	id := r.URL.Query().Get("id")
-	log.Printf("Param retrieved from query ->> ID %s", id)
 
 	// Read and validate request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading request body: %v", err)
-		sendJSONResponse(w, http.StatusBadRequest, "Error reading request body")
+		response := createPayloadResponse(
+			false,
+			fmt.Sprintf("Error reading request body: %v", err),
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
 	var unmarshalledBody map[string]any
 	if err := json.Unmarshal(body, &unmarshalledBody); err != nil {
 		log.Printf("Invalid JSON in request body: %v", err)
-		sendJSONResponse(w, http.StatusBadRequest, "Invalid JSON format in request body")
+		response := createPayloadResponse(
+			false,
+			fmt.Sprintf("Invalid JSON format in request body: %v", err),
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
 	payloadRaw, ok := unmarshalledBody["payload"]
 	if !ok {
 		log.Print("no payload key provided")
-		sendJSONResponse(w, http.StatusBadRequest, "payload key expected in request body")
+		response := createPayloadResponse(
+			false,
+			"payload key expected in request body",
+			http.StatusBadRequest,
+		)
+		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -344,7 +303,12 @@ func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	if payloadStr, isString := payloadRaw.(string); isString {
 		if err := json.Unmarshal([]byte(payloadStr), &payload); err != nil {
 			log.Printf("Invalid JSON in payload string: %v", err)
-			sendJSONResponse(w, http.StatusBadRequest, "Invalid JSON in payload string")
+			response := createPayloadResponse(
+				false,
+				fmt.Sprintf("Invalid JSON in payload string: %v", err),
+				http.StatusBadRequest,
+			)
+			sendJSONResponse(w, http.StatusBadRequest, response)
 			return
 		}
 	} else {
@@ -356,7 +320,12 @@ func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	schema, err := getSchema(id)
 	if err != nil {
 		log.Printf("Error retrieving schema: %v", err)
-		sendJSONResponse(w, http.StatusInternalServerError, "Error retrieving schema")
+		response := createPayloadResponse(
+			false,
+			fmt.Sprintf("Error retrieving schema: %v", err),
+			http.StatusInternalServerError,
+		)
+		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
@@ -368,7 +337,12 @@ func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
 		log.Printf("Error during schema validation: %v", err)
-		sendJSONResponse(w, http.StatusInternalServerError, "Error validating against schema")
+		response := createPayloadResponse(
+			false,
+			fmt.Sprintf("Error validating against schema: %v", err),
+			http.StatusInternalServerError,
+		)
+		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
@@ -380,24 +354,22 @@ func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 			errorMessages = append(errorMessages, err.String())
 		}
 
-		response := map[string]interface{}{
-			"isValid":    false,
-			"httpStatus": http.StatusOK,
-			"errorCode":  "SCHEMA_VALIDATION_FAILED",
-			"message":    strings.Join(errorMessages, "; "),
-		}
+		response := createPayloadResponse(
+			false,
+			strings.Join(errorMessages, "; "),
+			http.StatusOK,
+		)
 		log.Print(response)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		sendJSONResponse(w, http.StatusOK, response)
 		return
 	}
 
 	// If we get here, validation passed
-	response := map[string]interface{}{
-		"isValid":    true,
-		"httpStatus": http.StatusOK,
-		"errorCode":  "SCHEMA_VALIDATION_SUCCESS",
-	}
+	response := createPayloadResponse(
+		true,
+		"Payload validates against schema",
+		http.StatusOK,
+	)
 	log.Print(response)
-	sendJSONResponse(w, http.StatusOK, "Payload validates against schema")
+	sendJSONResponse(w, http.StatusOK, response)
 }

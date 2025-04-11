@@ -197,31 +197,37 @@ func transformJSONToSchemaFormat(jsonStr string) (string, error) {
 	return string(result), nil
 }
 
-func setDefault(s *schemaRegistryResponse) {
-	s.IsCompatible = nil
-	s.ErrorCode = 0
-	s.Message = ""
-	s.HttpStatus = 0
-}
-
-func sendJSONResponse(w http.ResponseWriter, statusCode int, msg string) {
+func sendJSONResponse(w http.ResponseWriter, statusCode int, payload any) {
 	// Set content type header
 	w.Header().Set("Content-Type", "application/json")
 
 	// Set the status code
 	w.WriteHeader(statusCode)
 
-	// Create response structure
-	response := map[string]interface{}{
-		"isValid":    statusCode >= 200 && statusCode < 300,
-		"httpStatus": statusCode,
-		"message":    msg,
-	}
 	// Encode and send the response
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		// If encoding fails, send a simple error
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
+	}
+}
+
+// createPayloadResponse creates a payloadTestResponse struct instance with the given parameters
+func createPayloadResponse(isValid bool, message string, statusCode int) payloadTestResponse {
+	return payloadTestResponse{
+		IsCompatible: &isValid,
+		Message:      message,
+		HttpStatus:   statusCode,
+	}
+}
+
+// createSchemaRegistryResponse creates a schemaRegistryResponse struct instance with the given parameters
+func createSchemaRegistryResponse(isCompatible bool, message string, httpStatus int, errorCode int) schemaRegistryResponse {
+	return schemaRegistryResponse{
+		IsCompatible: &isCompatible,
+		Message:      message,
+		HttpStatus:   httpStatus,
+		ErrorCode:    errorCode,
 	}
 }

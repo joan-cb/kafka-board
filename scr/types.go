@@ -60,3 +60,9 @@ type schemaRegistryResponse struct {
 	Message      string `json:"message"`
 	HttpStatus   int    `json:"http_status"`
 }
+
+type payloadTestResponse struct {
+	IsCompatible *bool  `json:"is_compatible"`
+	Message      string `json:"message"`
+	HttpStatus   int    `json:"http_status"`
+}
