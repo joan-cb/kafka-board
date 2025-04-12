@@ -7,16 +7,19 @@ import (
 
 func main() {
 	// Set up HTTP handlers
-	http.HandleFunc("/", handleHomePage)
-	http.HandleFunc("/schema/", handleSchemaPage)
-	http.HandleFunc("/test-schema/", handleTestSchema)
+
+	handler := returnHandler(&registryAPI{})
+	// No options for now, can be extended later
+	http.HandleFunc("/", handler.handleHomePage)
+	http.HandleFunc("/schema/", handler.handleSchemaPage)
+	http.HandleFunc("/test-schema/", handler.handleTestSchema)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Health check received")
 		w.WriteHeader(http.StatusOK)
 	})
 
-	http.HandleFunc("/test-payload", handleValidatePayload)
+	http.HandleFunc("/test-payload", handler.handleValidatePayload)
 
 	// Start server
 	log.Println("Server starting on http://localhost:9080")

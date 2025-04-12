@@ -14,9 +14,9 @@ import (
 )
 
 // Handle the home page load
-func handleHomePage(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	// First get all subjects
-	subjects, err := returnSubjects()
+	subjects, err := h.api.returnSubjects()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -24,7 +24,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Global Config
-	globalConfig, err := getGlobalConfig()
+	globalConfig, err := h.api.getGlobalConfig()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,7 +32,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Then get configs for all subjects
-	configs, err := returnSubjectConfigs(subjects)
+	configs, err := h.api.returnSubjectConfigs(subjects)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -51,14 +51,14 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle the schema page load
-func handleSchemaPage(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 	if subjectName == "" {
 		http.Error(w, "Subject name is required", http.StatusBadRequest)
 		return
 	}
 
-	schemas, err := getSchemas(subjectName)
+	schemas, err := h.api.getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -90,20 +90,20 @@ func handleSchemaPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // Internal handler
-func handleTestSchema(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleTestSchema(w http.ResponseWriter, r *http.Request) {
 	// Route to appropriate handler based on HTTP method
 	switch r.Method {
 	case http.MethodGet:
-		handleTestSchemaGet(w, r)
+		h.handleTestSchemaGet(w, r)
 	case http.MethodPost:
-		handleTestSchemaPost(w, r)
+		h.handleTestSchemaPost(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 // Handle the test schema page load
-func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 	version := r.URL.Query().Get("version")
 	id := r.URL.Query().Get("id")
@@ -115,7 +115,7 @@ func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get schemas for the subject
-	schemas, err := getSchemas(subjectName)
+	schemas, err := h.api.getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -166,7 +166,7 @@ func handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle the test schema post request for testing the compatibility of a new schema against existing schema
-func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
 	var requestData struct {
 		Subject string `json:"subject"`
@@ -176,11 +176,10 @@ func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&requestData)
-	if err != nil {
-		log.Printf("Error parsing JSON request: %v", err)
+	if checkErr(err) {
 		response := createSchemaRegistryResponse(
-			false,
-			fmt.Sprintf("Invalid JSON request: %v", err),
+			nil,
+			fmt.Sprintf("Error parsing JSON request: %v", err),
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
@@ -192,7 +191,7 @@ func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	if requestData.Subject == "" || requestData.Version == "" || requestData.Id == "" || requestData.JSON == "" {
 		log.Printf("Missing required fields in API request")
 		response := createSchemaRegistryResponse(
-			false,
+			nil,
 			"Missing required fields",
 			http.StatusBadRequest,
 			http.StatusBadRequest,
@@ -203,11 +202,10 @@ func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 
 	// Convert version to integer
 	versionInt, err := strconv.Atoi(requestData.Version)
-	if err != nil {
-		log.Printf("Error converting version to integer: %v", err)
+	if checkErr(err) {
 		response := createSchemaRegistryResponse(
-			false,
-			fmt.Sprintf("Invalid version number: %v", err),
+			nil,
+			fmt.Sprintf("Error parsing version number: %v", err),
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
@@ -215,138 +213,122 @@ func handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Testing schema for subject: %s, version: %d, id: %s", requestData.Subject, versionInt, requestData.Id)
-
 	// Test the schema
-	isCompatible, statusCode, message, err := testSchema(requestData.Subject, versionInt, requestData.JSON)
-	if err != nil {
-		log.Printf("Error testing schema: %v", err)
-		response := createSchemaRegistryResponse(
-			false,
-			fmt.Sprintf("Error testing schema: %v", err),
-			http.StatusInternalServerError,
-			http.StatusInternalServerError,
-		)
-		sendJSONResponse(w, http.StatusInternalServerError, response)
+	resp, err := h.api.testSchema(requestData.Subject, versionInt, requestData.JSON)
+	if checkErr(err) {
+		sendJSONResponse(w, http.StatusInternalServerError, resp)
 		return
 	}
 
-	// Determine error code based on status code
-	errorCode := 0
-	if statusCode >= 400 {
-		errorCode = statusCode
-	}
-
 	// Ensure message has a value
-	if message == "" {
-		message = "None"
+	if resp.Message == "" {
+		resp.Message = "None"
 	}
-
-	// Create response
-	response := createSchemaRegistryResponse(
-		isCompatible,
-		message,
-		statusCode,
-		errorCode,
-	)
-
+	log.Printf("API Schema test result: isCompatible=%v, httpStatus=%d, errorCode=%d, message=%s", resp.IsCompatible, resp.StatusCode, resp.ErrorCode, resp.Message)
 	// Send JSON response
-	sendJSONResponse(w, statusCode, response)
+	sendJSONResponse(w, resp.StatusCode, resp)
 
-	log.Printf("API Schema test result: isCompatible=%t, httpStatus=%d, errorCode=%d, message=%s",
-		isCompatible, statusCode, errorCode, message)
 }
 
 // Called from the schema page to validate a payload against a schema
-func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
+
+func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	// Read and validate request body
 	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("Error reading request body: %v", err)
+	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
 			fmt.Sprintf("Error reading request body: %v", err),
 			http.StatusBadRequest,
 		)
+		log.Printf("response sent to client: %v", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
+	// Parse the JSON request body
 	var unmarshalledBody map[string]any
-	if err := json.Unmarshal(body, &unmarshalledBody); err != nil {
-		log.Printf("Invalid JSON in request body: %v", err)
+	err = json.Unmarshal(body, &unmarshalledBody)
+	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
 			fmt.Sprintf("Invalid JSON format in request body: %v", err),
 			http.StatusBadRequest,
 		)
+		log.Printf("response sent to client: %v", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
+	// Ensure payload key exists
 	payloadRaw, ok := unmarshalledBody["payload"]
 	if !ok {
-		log.Print("no payload key provided")
 		response := createPayloadResponse(
 			false,
 			"payload key expected in request body",
 			http.StatusBadRequest,
 		)
+		log.Printf("response sent to client: %v", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
 
-	// If payload is a string, try to parse it as JSON
+	// Process the payload based on its type
 	var payload interface{}
-	if payloadStr, isString := payloadRaw.(string); isString {
-		if err := json.Unmarshal([]byte(payloadStr), &payload); err != nil {
-			log.Printf("Invalid JSON in payload string: %v", err)
+
+	// Case 1: Payload is a string (need to parse as JSON)
+	payloadStr, isString := payloadRaw.(string)
+	if isString {
+		err = json.Unmarshal([]byte(payloadStr), &payload)
+		if checkErr(err) {
 			response := createPayloadResponse(
 				false,
 				fmt.Sprintf("Invalid JSON in payload string: %v", err),
 				http.StatusBadRequest,
 			)
+			log.Printf("response sent to client: %v", response)
 			sendJSONResponse(w, http.StatusBadRequest, response)
 			return
 		}
 	} else {
-		// If it's already a JSON object, use it directly
+		// Case 2: Payload is already a JSON object
 		payload = payloadRaw
 	}
 
 	// Get the schema
-	schema, err := getSchema(id)
-	if err != nil {
-		log.Printf("Error retrieving schema: %v", err)
+	schema, err := h.api.getSchema(id)
+	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
 			fmt.Sprintf("Error retrieving schema: %v", err),
 			http.StatusInternalServerError,
 		)
+		log.Printf("response sent to client: %v", response)
 		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
-	// Create schema loader
+	// Create schema loader and validate
 	schemaLoader := gojsonschema.NewStringLoader(schema.Schema)
 	documentLoader := gojsonschema.NewGoLoader(payload)
 
 	// Perform validation
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	if err != nil {
-		log.Printf("Error during schema validation: %v", err)
+	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
 			fmt.Sprintf("Error validating against schema: %v", err),
 			http.StatusInternalServerError,
 		)
+		log.Printf("response sent to client: %v", response)
 		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
-	// Check validation result
+	// Create response based on validation result
+	var response payloadTestResponse
 	if !result.Valid() {
 		// Collect validation errors
 		var errorMessages []string
@@ -354,22 +336,20 @@ func handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 			errorMessages = append(errorMessages, err.String())
 		}
 
-		response := createPayloadResponse(
+		response = createPayloadResponse(
 			false,
 			strings.Join(errorMessages, "; "),
 			http.StatusOK,
 		)
-		log.Print(response)
-		sendJSONResponse(w, http.StatusOK, response)
-		return
+	} else {
+		response = createPayloadResponse(
+			true,
+			"Payload validates against schema",
+			http.StatusOK,
+		)
 	}
 
-	// If we get here, validation passed
-	response := createPayloadResponse(
-		true,
-		"Payload validates against schema",
-		http.StatusOK,
-	)
-	log.Print(response)
-	sendJSONResponse(w, http.StatusOK, response)
+	// Log and send the response
+	log.Printf("response sent to client: %v", response)
+	sendJSONResponse(w, response.StatusCode, response)
 }

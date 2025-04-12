@@ -10,6 +10,8 @@ import (
 
 var baseRegistryURL = "http://schema-registry:8081"
 
+type registryAPI struct{}
+
 // setDefaultNone sets "None" for any unpopulated string fields in the SubjectConfig
 func (sc *SubjectConfig) setDefaultNone() {
 	if sc.Name == "" {
@@ -35,7 +37,7 @@ func (sc *GlobalConfig) setDefaultNone() {
 	}
 }
 
-func returnSubjects() ([]string, error) {
+func (r *registryAPI) returnSubjects() ([]string, error) {
 	// Create HTTP client
 	client := &http.Client{}
 
@@ -75,7 +77,7 @@ func returnSubjects() ([]string, error) {
 	return subjects, nil
 }
 
-func returnSubjectConfigs(subjectNames []string) ([]SubjectConfigInterface, error) {
+func (r *registryAPI) returnSubjectConfigs(subjectNames []string) ([]SubjectConfigInterface, error) {
 	var configs []SubjectConfigInterface
 	client := &http.Client{}
 
@@ -140,7 +142,7 @@ func returnSubjectConfigs(subjectNames []string) ([]SubjectConfigInterface, erro
 	return configs, nil
 }
 
-func getGlobalConfig() (GlobalConfig, error) {
+func (r *registryAPI) getGlobalConfig() (GlobalConfig, error) {
 	client := &http.Client{}
 	url := baseRegistryURL + "/config"
 	req, err := http.NewRequest("GET", url, nil)
@@ -187,7 +189,7 @@ func getGlobalConfig() (GlobalConfig, error) {
 	return config, nil
 }
 
-func getSchemas(subjectName string) ([]Schema, error) {
+func (r *registryAPI) getSchemas(subjectName string) ([]Schema, error) {
 	var allSchemas []Schema
 	client := &http.Client{}
 	url := baseRegistryURL + "/schemas"
@@ -229,56 +231,60 @@ func getSchemas(subjectName string) ([]Schema, error) {
 }
 
 // transformJSONToSchemaFormat takes a JSON string and wraps it in the Schema Registry format
-
-func testSchema(subjectName string, version int, testJSON string) (bool, int, string, error) {
+func (r *registryAPI) testSchema(subjectName string, version int, testJSON string) (schemaRegistryResponse, error) {
 	// Create the request
 	req, err := createTestSchemaRequest(subjectName, version, testJSON)
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
-		return false, http.StatusInternalServerError, fmt.Sprintf("Error creating request: %v", err), err
+		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error creating request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		return resp, err
 	}
 
 	// Make the request
 	resp, err := makeHTTPRequest(req)
 	if err != nil {
 		log.Printf("Error making request: %v", err)
-		return false, http.StatusInternalServerError, fmt.Sprintf("Error making request: %v", err), err
+		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error making request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		return resp, err
 	}
 
 	// Read the response body
 	body, err := readResponseBody(resp)
 	if err != nil {
 		log.Printf("Error reading response: %v", err)
-		return false, http.StatusInternalServerError, fmt.Sprintf("Error reading response: %v", err), err
+		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error reading response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		return resp, err
 	}
 
 	// Process the response
-	response, err := processResponse(body, resp.StatusCode)
+	result, err := processCompatibilityResponse(body, resp.StatusCode)
 	if err != nil {
 		log.Printf("Error processing response: %v", err)
-		return false, http.StatusInternalServerError, fmt.Sprintf("Error processing response: %v", err), err
+		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error processing response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		return resp, err
 	}
 
 	// Ensure message is never empty
-	if response.Message == "" {
-		response.Message = "None"
+	if result.Message == "" {
+		result.Message = "None"
 	}
 
 	// Ensure message is not too long as it will break the UI and Confluent returns long messages
-	if len(response.Message) > 100 {
-		response.Message = response.Message[:100] + "..."
+	if len(result.Message) > 100 {
+		result.Message = result.Message[:100] + "..."
 	}
 
 	// Handle nil IsCompatible pointer - this means the compatibility couldn't be determined
-	if response.IsCompatible == nil {
-		return false, response.HttpStatus, response.Message, nil
+	if result.IsCompatible == nil {
+		resp := createSchemaRegistryResponse(nil, result.Message, result.StatusCode, result.ErrorCode)
+		return resp, nil
 	}
 
 	// Return the dereferenced bool value
-	return *response.IsCompatible, response.HttpStatus, response.Message, nil
+	return result, nil
 }
 
-func getSchema(id string) (Schema, error) {
+func (r *registryAPI) getSchema(id string) (Schema, error) {
 
 	schema := Schema{}
 

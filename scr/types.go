@@ -58,11 +58,33 @@ type schemaRegistryResponse struct {
 	IsCompatible *bool  `json:"is_compatible"`
 	ErrorCode    int    `json:"error_code"`
 	Message      string `json:"message"`
-	HttpStatus   int    `json:"http_status"`
+	StatusCode   int    `json:"http_status"`
 }
 
 type payloadTestResponse struct {
-	IsCompatible *bool  `json:"is_compatible"`
+	IsCompatible bool   `json:"is_compatible"`
 	Message      string `json:"message"`
-	HttpStatus   int    `json:"http_status"`
+	StatusCode   int    `json:"http_status"`
+}
+
+type handler struct {
+	api registryAPICalls
+}
+
+// returnHandler creates and returns a new handler that implements registryAPICalls
+// It can be extended to accept configuration options like base URLs, credentials, etc.
+func returnHandler(registry registryAPICalls) *handler {
+	return &handler{
+		api: registry, // Use the provided registry implementation
+	}
+}
+
+type registryAPICalls interface {
+	// API methods
+	returnSubjects() ([]string, error)
+	returnSubjectConfigs(subjectNames []string) ([]SubjectConfigInterface, error)
+	getGlobalConfig() (GlobalConfig, error)
+	getSchemas(subjectName string) ([]Schema, error)
+	testSchema(subjectName string, version int, testJSON string) (schemaRegistryResponse, error)
+	getSchema(id string) (Schema, error)
 }

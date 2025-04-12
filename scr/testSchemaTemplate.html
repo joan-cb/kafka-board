@@ -503,49 +503,49 @@
             // Determine badge classes based on response values
             let compatibilityBadgeClass = "icon-badge-none";
             
-            // Handle both isCompatible (from schema testing) and isValid (from payload testing)
-            if (data.isCompatible === true || data.isValid === true) {
+            // Handle both is_compatible (from schema testing) and is_valid (from payload testing)
+            if (data.is_compatible === true || data.is_valid === true) {
                 compatibilityBadgeClass = "icon-badge-true";
-            } else if (data.isCompatible === false || data.isValid === false) {
+            } else if (data.is_compatible === false || data.is_valid === false) {
                 compatibilityBadgeClass = "icon-badge-false";
             } else {
                 compatibilityBadgeClass = "icon-badge-warning";
             }
 
             let statusBadgeClass = "icon-badge-none";
-            if (data.httpStatus >= 400) {
+            if (data.http_status >= 400) {
                 statusBadgeClass = "icon-badge-false";
-            } else if (data.httpStatus >= 300) {
+            } else if (data.http_status >= 300) {
                 statusBadgeClass = "icon-badge-warning";
-            } else if (data.httpStatus >= 200) {
+            } else if (data.http_status >= 200) {
                 statusBadgeClass = "icon-badge-true";
             }
 
             let errorBadgeClass = "icon-badge-none";
             // Handle both numeric and string error codes
-            if (typeof data.errorCode === 'number' && data.errorCode > 0) {
+            if (typeof data.error_code === 'number' && data.error_code > 0) {
                 errorBadgeClass = "icon-badge-false";
-            } else if (typeof data.errorCode === 'string' && data.errorCode !== "SCHEMA_VALIDATION_SUCCESS") {
+            } else if (typeof data.error_code === 'string' && data.error_code !== "SCHEMA_VALIDATION_SUCCESS") {
                 errorBadgeClass = "icon-badge-false";
-            } else if (data.errorCode === "SCHEMA_VALIDATION_SUCCESS") {
+            } else if (data.error_code === "SCHEMA_VALIDATION_SUCCESS") {
                 errorBadgeClass = "icon-badge-true";
             }
 
             let messageBadgeClass = "icon-badge-none";
             if (data.message && data.message !== "None") {
-                if (data.isCompatible === false || data.isValid === false) {
+                if (data.is_compatible === false || data.is_valid === false) {
                     messageBadgeClass = "icon-badge-false";
-                } else if (data.isCompatible === true || data.isValid === true) {
+                } else if (data.is_compatible === true || data.is_valid === true) {
                     messageBadgeClass = "icon-badge-true";
                 }
             }
             
             // Update the compatibility result with appropriate text based on test type
             let compatText = 'Unknown';
-            if (data.isCompatible !== undefined) {
-                compatText = data.isCompatible === true ? 'Compatible' : 'Not Compatible';
-            } else if (data.isValid !== undefined) {
-                compatText = data.isValid === true ? 'Valid' : 'Not Valid';
+            if (data.is_compatible !== undefined) {
+                compatText = data.is_compatible === true ? 'Compatible' : 'Not Compatible';
+            } else if (data.is_valid !== undefined) {
+                compatText = data.is_valid === true ? 'Valid' : 'Not Valid';
             }
             
             document.getElementById('compatibilityResult').innerHTML = 
@@ -553,14 +553,14 @@
             
             // Update the HTTP status
             document.getElementById('statusResult').innerHTML = 
-                '<span class="icon-badge ' + statusBadgeClass + '">' + data.httpStatus + '</span>';
+                '<span class="icon-badge ' + statusBadgeClass + '">' + data.http_status + '</span>';
             
             // Update the error code display
             let errorDisplay = 'None';
-            if (typeof data.errorCode === 'number') {
-                errorDisplay = data.errorCode === 0 ? 'None' : data.errorCode;
-            } else if (typeof data.errorCode === 'string') {
-                errorDisplay = data.errorCode;
+            if (typeof data.error_code === 'number') {
+                errorDisplay = data.error_code === 0 ? 'None' : data.error_code;
+            } else if (typeof data.error_code === 'string') {
+                errorDisplay = data.error_code;
             }
             
             document.getElementById('errorCodeResult').innerHTML = 
@@ -636,9 +636,9 @@
                 
                 // Create error response and use shared display function
                 displayValidationResult({
-                    isValid: false,
-                    httpStatus: 500,
-                    errorCode: "ERROR",
+                    is_valid: false,
+                    http_status: 500,
+                    error_code: "ERROR",
                     message: error.message || "Failed to test payload"
                 });
             });
@@ -655,8 +655,9 @@
             const originalButtonText = testButton.textContent;
             testButton.textContent = 'Testing...';
             testButton.disabled = true;
+            
 
-            fetch('/test-schema', {
+            fetch('/test-schema/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -684,9 +685,9 @@
                 
                 // Create error response and use shared display function
                 displayValidationResult({
-                    isCompatible: false,
-                    httpStatus: 500,
-                    errorCode: "ERROR",
+                    is_compatible: false,
+                    http_status: 500,
+                    error_code: "ERROR",
                     message: error.message || "Failed to test schema"
                 });
             });
