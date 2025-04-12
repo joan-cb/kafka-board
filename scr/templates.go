@@ -1760,123 +1760,101 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             document.getElementById('resultContainer').style.display = 'block';
         }
         
-        function testPayload() {
-            const testJsonText = document.getElementById('testJson').value;
-            const id = "{{.SchemaID}}";
-            
-            console.log("Raw textarea value:", testJsonText);
-            const url = '/test-payload?id=' + encodeURIComponent(id);            
-            console.log(url);
-            
-            const requestBody = JSON.stringify({
-                payload: testJsonText
-            });
-            console.log("Request body being sent:", requestBody);
-            
-            const testButton2 = document.getElementById('testButton2');
-            const originalButtonText = testButton2.textContent;
-            testButton2.textContent = 'Testing...';
-            testButton2.disabled = true;
+function testPayload() {
+    const testJsonText = document.getElementById('testJson').value;
+    const id = "{{.SchemaID}}";  // Use the template variable, not hardcoded "1"
+    
+    // Show loading state
+    const testButton2 = document.getElementById('testButton2');
+    const originalButtonText = testButton2.textContent;
+    testButton2.textContent = 'Testing...';
+    testButton2.disabled = true;
+
+    // Prepare the request
+    const url = '/test-payload?id=' + encodeURIComponent(id);
+    const requestBody = JSON.stringify({
+        payload: testJsonText
+    });
+    
+    // Make the request
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: requestBody
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Reset button state
+        testButton2.textContent = originalButtonText;
+        testButton2.disabled = false;
         
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: requestBody
-            })
-            .then(response => {
-                console.log("Raw response:", response);
-                // Check if response is ok (status in the range 200-299)
-                if (!response.ok) {
-                    throw new Error('HTTP error! status: ' + response.status);
-                }
-                // First try to get the text of the response
-                return response.text().then(text => {
-                    console.log("Response text:", text);
-                    // If we have text, try to parse it as JSON
-                    if (text) {
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            console.error("JSON parse error:", e);
-                            throw new Error("Invalid JSON response");
-                        }
-                    } else {
-                        throw new Error("Empty response");
-                    }
-                });
-            })
-            .then(data => {
-                console.log("Parsed response data:", data);
-                testButton2.textContent = originalButtonText;
-                testButton2.disabled = false;
-                // Use the shared displayValidationResult function
-                displayValidationResult(data);
-            })
-            .catch(error => {
-                console.error("Error occurred:", error);
-                testButton2.textContent = originalButtonText;
-                testButton2.disabled = false;
-                
-                // Create error response and use shared display function
-                displayValidationResult({
-                    is_valid: false,
-                    http_status: 500,
-                    error_code: "ERROR",
-                    message: error.message || "Failed to test payload"
-                });
-            });
-        }
+        // Let the display function handle the response as-is
+        displayValidationResult(data);
+    })
+    .catch(error => {
+        // Only handle network or parse errors
+        console.error("Network or parse error:", error);
+        testButton2.textContent = originalButtonText;
+        testButton2.disabled = false;
+        
+        // Create a minimal error response
+        displayValidationResult({
+            is_compatible: false,
+            http_status: 500,
+            message: "Network or parsing error occurred"
+        });
+    });
+}
 
-        function testSchema() {
-            const testJsonText = document.getElementById('testJson').value;
-            const subject = "{{.SubjectName}}";
-            const version = "{{.Version}}";
-            const id = "{{.SchemaID}}";
+    function testSchema() {
+    const testJsonText = document.getElementById('testJson').value;
+    const subject = "{{.SubjectName}}";
+    const version = "{{.Version}}";
+    const id = "{{.SchemaID}}";
 
-            // Show loading state
-            const testButton = document.getElementById('testButton');
-            const originalButtonText = testButton.textContent;
-            testButton.textContent = 'Testing...';
-            testButton.disabled = true;
-            
-
-            fetch('/test-schema/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    subject: subject,
-                    version: version,
-                    id: id,
-                    json: testJsonText
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Reset button
-                testButton.textContent = originalButtonText;
-                testButton.disabled = false;
-                
-                // Use the shared displayValidationResult function
-                displayValidationResult(data);
-            })
-            .catch(error => {
-                // Reset button
-                testButton.textContent = originalButtonText;
-                testButton.disabled = false;
-                
-                // Create error response and use shared display function
-                displayValidationResult({
-                    is_compatible: false,
-                    http_status: 500,
-                    error_code: "ERROR",
-                    message: error.message || "Failed to test schema"
-                });
-            });
-        }
+    // Show loading state
+    const testButton = document.getElementById('testButton');
+    const originalButtonText = testButton.textContent;
+    testButton.textContent = 'Testing...';
+    testButton.disabled = true;
+    
+    fetch('/test-schema/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            subject: subject,
+            version: version,
+            id: id,
+            json: testJsonText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Reset button
+        testButton.textContent = originalButtonText;
+        testButton.disabled = false;
+        
+        // Use the shared displayValidationResult function with data as-is
+        displayValidationResult(data);
+    })
+    .catch(error => {
+        // Only handle network or parse errors
+        console.error("Network or parse error:", error);
+        testButton.textContent = originalButtonText;
+        testButton.disabled = false;
+        
+        // Create a minimal error response
+        displayValidationResult({
+            is_compatible: false,
+            http_status: 500,
+            message: "Network or parsing error occurred"
+        });
+    });
+}
     </script>
 </body>
 </html>`

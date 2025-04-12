@@ -183,6 +183,9 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+		logger.Info("response sent to client",
+			"function", "handleTestSchemaPost",
+			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
@@ -196,6 +199,9 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+		logger.Info("response sent to client",
+			"function", "handleTestSchemaPost",
+			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
@@ -209,6 +215,9 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+		logger.Info("response sent to client",
+			"function", "handleTestSchemaPost",
+			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
@@ -216,6 +225,9 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Test the schema
 	resp, err := h.api.testSchema(requestData.Subject, versionInt, requestData.JSON)
 	if checkErr(err) {
+		logger.Info("response sent to client",
+			"function", "handleTestSchemaPost",
+			"response", resp)
 		sendJSONResponse(w, http.StatusInternalServerError, resp)
 		return
 	}
@@ -224,14 +236,14 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	if resp.Message == "" {
 		resp.Message = "None"
 	}
-	log.Printf("API Schema test result: isCompatible=%v, httpStatus=%d, errorCode=%d, message=%s", resp.IsCompatible, resp.StatusCode, resp.ErrorCode, resp.Message)
+	logger.Info("response sent to client",
+		"function", "handleTestSchemaPost",
+		"response", resp)
 	// Send JSON response
 	sendJSONResponse(w, resp.StatusCode, resp)
-
 }
 
 // Called from the schema page to validate a payload against a schema
-
 func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
@@ -243,7 +255,9 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error reading request body: %v", err),
 			http.StatusBadRequest,
 		)
-		log.Printf("response sent to client: %v", response)
+		logger.Info("response sent to client",
+			"function", "handleValidatePayload - error reading request body",
+			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
@@ -257,10 +271,15 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Invalid JSON format in request body: %v", err),
 			http.StatusBadRequest,
 		)
-		log.Printf("response sent to client: %v", response)
+		logger.Info("response sent to client",
+			"function", "handleValidatePayload - error unmarshalling request body",
+			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
+	logger.Debug("request body parsed",
+		"function", "handleValidatePayload",
+		"request body", unmarshalledBody)
 
 	// Ensure payload key exists
 	payloadRaw, ok := unmarshalledBody["payload"]
@@ -270,7 +289,10 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			"payload key expected in request body",
 			http.StatusBadRequest,
 		)
-		log.Printf("response sent to client: %v", response)
+		logger.Info("response sent to client",
+			"function", "handleValidatePayload - error payload key expected in request body",
+			"response", response)
+
 		sendJSONResponse(w, http.StatusBadRequest, response)
 		return
 	}
@@ -285,10 +307,13 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 		if checkErr(err) {
 			response := createPayloadResponse(
 				false,
-				fmt.Sprintf("Invalid JSON in payload string: %v", err),
+				fmt.Sprintf("value of payload key is not valid JSON: %v", err),
 				http.StatusBadRequest,
 			)
-			log.Printf("response sent to client: %v", response)
+			logger.Info("response sent to client",
+				"function", "handleValidatePayload - value of payload key is not valid JSON",
+				"response", response,
+				"payload", payloadStr)
 			sendJSONResponse(w, http.StatusBadRequest, response)
 			return
 		}
@@ -305,7 +330,9 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error retrieving schema: %v", err),
 			http.StatusInternalServerError,
 		)
-		log.Printf("response sent to client: %v", response)
+		logger.Info("response sent to client",
+			"function", "handleValidatePayload ",
+			"response", response)
 		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
@@ -322,7 +349,9 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error validating against schema: %v", err),
 			http.StatusInternalServerError,
 		)
-		log.Printf("response sent to client: %v", response)
+		logger.Info("response sent to client",
+			"function", "handleValidatePayload - error validating against schema",
+			"response", response)
 		sendJSONResponse(w, http.StatusInternalServerError, response)
 		return
 	}
@@ -350,6 +379,8 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Log and send the response
-	log.Printf("response sent to client: %v", response)
+	logger.Info("response sent to client",
+		"function", "handleValidatePayload - success",
+		"response", response)
 	sendJSONResponse(w, response.StatusCode, response)
 }

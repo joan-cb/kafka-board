@@ -226,14 +226,23 @@ func (r *registryAPI) getSchemas(subjectName string) ([]Schema, error) {
 			filteredSchemas = append(filteredSchemas, schema)
 		}
 	}
-	log.Printf("Schemas returned by getSchemas: %v", filteredSchemas)
 	return filteredSchemas, nil
 }
 
 // transformJSONToSchemaFormat takes a JSON string and wraps it in the Schema Registry format
 func (r *registryAPI) testSchema(subjectName string, version int, testJSON string) (schemaRegistryResponse, error) {
+
+	//validate JSON and transform to Schema Registry format
+	// Transform JSON to Schema Registry format
+	payload, err := transformJSONToSchemaFormat(testJSON)
+	if err != nil {
+		log.Printf("Error transforming JSON to Schema Registry format: %v", err)
+		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error transforming JSON to Schema Registry format. Invalid JSON string: %v", err), http.StatusBadRequest, http.StatusBadRequest)
+		return resp, err
+	}
+	log.Printf("Transformed JSON returned by transformJSONToSchemaFormat: %s", payload)
 	// Create the request
-	req, err := createTestSchemaRequest(subjectName, version, testJSON)
+	req, err := createTestSchemaRequest(subjectName, version, payload)
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
 		resp := createSchemaRegistryResponse(nil, fmt.Sprintf("Error creating request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
