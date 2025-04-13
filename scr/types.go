@@ -68,14 +68,14 @@ type payloadTestResponse struct {
 }
 
 type handler struct {
-	api registryAPICalls
+	registryAPI registryAPICalls
 }
 
 // returnHandler creates and returns a new handler that implements registryAPICalls
 // It can be extended to accept configuration options like base URLs, credentials, etc.
 func returnHandler(registry registryAPICalls) *handler {
 	return &handler{
-		api: registry, // Use the provided registry implementation
+		registryAPI: registry, // Use the provided registry implementation
 	}
 }
 

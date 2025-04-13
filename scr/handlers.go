@@ -16,7 +16,7 @@ import (
 // Handle the home page load
 func (h *handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	// First get all subjects
-	subjects, err := h.api.returnSubjects()
+	subjects, err := h.registryAPI.returnSubjects()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -24,7 +24,7 @@ func (h *handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Global Config
-	globalConfig, err := h.api.getGlobalConfig()
+	globalConfig, err := h.registryAPI.getGlobalConfig()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,7 +32,7 @@ func (h *handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Then get configs for all subjects
-	configs, err := h.api.returnSubjectConfigs(subjects)
+	configs, err := h.registryAPI.returnSubjectConfigs(subjects)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,7 +58,7 @@ func (h *handler) handleSchemaPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schemas, err := h.api.getSchemas(subjectName)
+	schemas, err := h.registryAPI.getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -115,7 +115,7 @@ func (h *handler) handleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get schemas for the subject
-	schemas, err := h.api.getSchemas(subjectName)
+	schemas, err := h.registryAPI.getSchemas(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -183,26 +183,30 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+
 		logger.Info("response sent to client",
 			"function", "handleTestSchemaPost",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 
 	// Validate required fields
 	if requestData.Subject == "" || requestData.Version == "" || requestData.Id == "" || requestData.JSON == "" {
-		log.Printf("Missing required fields in API request")
 		response := createSchemaRegistryResponse(
 			nil,
 			"Missing required fields",
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+
 		logger.Info("response sent to client",
 			"function", "handleTestSchemaPost",
 			"response", response)
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 
@@ -218,17 +222,21 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 		logger.Info("response sent to client",
 			"function", "handleTestSchemaPost",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 
 	// Test the schema
-	resp, err := h.api.testSchema(requestData.Subject, versionInt, requestData.JSON)
+	resp, err := h.registryAPI.testSchema(requestData.Subject, versionInt, requestData.JSON)
 	if checkErr(err) {
 		logger.Info("response sent to client",
 			"function", "handleTestSchemaPost",
 			"response", resp)
+
 		sendJSONResponse(w, http.StatusInternalServerError, resp)
+
 		return
 	}
 
@@ -239,7 +247,7 @@ func (h *handler) handleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	logger.Info("response sent to client",
 		"function", "handleTestSchemaPost",
 		"response", resp)
-	// Send JSON response
+
 	sendJSONResponse(w, resp.StatusCode, resp)
 }
 
@@ -258,13 +266,16 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 		logger.Info("response sent to client",
 			"function", "handleValidatePayload - error reading request body",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 
 	// Parse the JSON request body
 	var unmarshalledBody map[string]any
 	err = json.Unmarshal(body, &unmarshalledBody)
+
 	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
@@ -274,7 +285,9 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 		logger.Info("response sent to client",
 			"function", "handleValidatePayload - error unmarshalling request body",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 	logger.Debug("request body parsed",
@@ -289,11 +302,13 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			"payload key expected in request body",
 			http.StatusBadRequest,
 		)
+
 		logger.Info("response sent to client",
 			"function", "handleValidatePayload - error payload key expected in request body",
 			"response", response)
 
 		sendJSONResponse(w, http.StatusBadRequest, response)
+
 		return
 	}
 
@@ -304,17 +319,21 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	payloadStr, isString := payloadRaw.(string)
 	if isString {
 		err = json.Unmarshal([]byte(payloadStr), &payload)
+
 		if checkErr(err) {
 			response := createPayloadResponse(
 				false,
 				fmt.Sprintf("value of payload key is not valid JSON: %v", err),
 				http.StatusBadRequest,
 			)
+
 			logger.Info("response sent to client",
 				"function", "handleValidatePayload - value of payload key is not valid JSON",
 				"response", response,
 				"payload", payloadStr)
+
 			sendJSONResponse(w, http.StatusBadRequest, response)
+
 			return
 		}
 	} else {
@@ -323,17 +342,20 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get the schema
-	schema, err := h.api.getSchema(id)
+	schema, err := h.registryAPI.getSchema(id)
 	if checkErr(err) {
 		response := createPayloadResponse(
 			false,
 			fmt.Sprintf("Error retrieving schema: %v", err),
 			http.StatusInternalServerError,
 		)
+
 		logger.Info("response sent to client",
 			"function", "handleValidatePayload ",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusInternalServerError, response)
+
 		return
 	}
 
@@ -349,10 +371,13 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error validating against schema: %v", err),
 			http.StatusInternalServerError,
 		)
+
 		logger.Info("response sent to client",
 			"function", "handleValidatePayload - error validating against schema",
 			"response", response)
+
 		sendJSONResponse(w, http.StatusInternalServerError, response)
+
 		return
 	}
 
@@ -382,5 +407,6 @@ func (h *handler) handleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	logger.Info("response sent to client",
 		"function", "handleValidatePayload - success",
 		"response", response)
+
 	sendJSONResponse(w, response.StatusCode, response)
 }

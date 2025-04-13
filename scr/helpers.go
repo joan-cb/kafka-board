@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/xeipuuv/gojsonschema"
 )
 
 // createTestSchemaRequest creates a new HTTP request for testing schema compatibility
@@ -185,69 +183,4 @@ func createSchemaRegistryResponse(isCompatible *bool, message string, httpStatus
 // checkErr is a helper function to check if an error is present
 func checkErr(e error) bool {
 	return e != nil
-}
-
-// handleSchemaError is a helper function to handle errors in schema testing
-// It logs the error, creates an appropriate response, sends it to the client, and returns true
-func handleSchemaError(w http.ResponseWriter, err error, message string, httpStatus int, errorCode int) bool {
-	// Return false immediately if there's no error
-	if !checkErr(err) {
-		return false
-	}
-
-	response := createSchemaRegistryResponse(
-		nil,
-		fmt.Sprintf("%s: %v", message, err),
-		httpStatus,
-		errorCode,
-	)
-	sendJSONResponse(w, httpStatus, response)
-
-	return true
-}
-
-func handlePayloadError(w http.ResponseWriter, err error, message string, statusCode int) bool {
-	// If no error is provided, assume it's a validation failure
-	if err == nil && message != "" {
-		log.Print(message)
-		response := createPayloadResponse(
-			false,
-			message,
-			statusCode,
-		)
-		sendJSONResponse(w, statusCode, response)
-		return true
-	}
-
-	// Return false if there's no error
-	if !checkErr(err) {
-		return false
-	}
-	response := createPayloadResponse(
-		false,
-		fmt.Sprintf("%s: %v", message, err),
-		statusCode,
-	)
-	sendJSONResponse(w, statusCode, response)
-
-	return true
-}
-
-// handleValidationResult sends a response for a validation result
-func handleValidationResult(w http.ResponseWriter, result bool, message string, statusCode int) {
-	response := createPayloadResponse(
-		result,
-		message,
-		statusCode,
-	)
-	sendJSONResponse(w, statusCode, response)
-}
-
-// Helper function to collect validation errors
-func collectValidationErrors(result *gojsonschema.Result) []string {
-	var errorMessages []string
-	for _, err := range result.Errors() {
-		errorMessages = append(errorMessages, err.String())
-	}
-	return errorMessages
 }
