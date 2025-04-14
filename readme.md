@@ -11,7 +11,7 @@ This application provides a user-friendly web interface to interact with a Confl
 - Validate JSON payloads against schemas
 - Retrieve global and subject-level configuration
 
-## Architecture
+## Implementation
 
 The application is built with Go and consists of three main components:
 
