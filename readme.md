@@ -55,48 +55,8 @@ The application is built with Go and consists of three main components:
 
 ## Technical Details
 
-- Built with Go 1.22+
+- Built with Go 1.24
 - Uses standard library `net/http` for web server
 - Implements structured logging with `slog`
 - JSON schema validation with `gojsonschema`
-- Template-based UI rendering
 - REST API communication with Schema Registry
-
-## Dependencies
-
-- Go 1.22 or later
-- Confluent Schema Registry (v7.3.0+)
-- Docker (for containerized deployment)
-
-## API Endpoints
-
-- `/` - Home page with subject list
-- `/schema/` - Schema details page
-- `/test-schema/` - Schema testing interface
-- `/test-payload` - Payload validation endpoint
-- `/health` - Health check endpoint
-
-## Configuration
-
-The application connects to the Schema Registry at `http://schema-registry:8081` by default. This can be configured through environment variables.
-
-## Logging
-
-The application uses structured logging with different levels:
-- Debug: Detailed information for debugging
-- Info: General operational information
-- Error: Error conditions that need attention
-
-## Error Handling
-
-- Comprehensive error handling throughout the application
-- User-friendly error messages
-- Detailed logging for debugging
-- Proper HTTP status codes
-
-## Security
-
-- Input validation for all user inputs
-- Safe JSON parsing
-- Error handling for malformed requests
-- Proper HTTP status codes for different scenarios
