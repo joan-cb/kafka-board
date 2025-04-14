@@ -1,15 +1,5 @@
 package handlers
 
-// import (
-// 	"encoding/json"
-// 	"log/slog"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"os"
-// 	"strings"
-// 	"testing"
-// )
-
 // func TestHandleValidatePayload(t *testing.T) {
 // 	// Set up logger to discard logs to avoid panics
 // 	logggerHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{

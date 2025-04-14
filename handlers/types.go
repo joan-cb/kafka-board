@@ -3,16 +3,21 @@ package handlers
 import (
 	"kafka-board/confluentRegistryAPI"
 	"kafka-board/types"
+	"log/slog"
 )
 
 type Handler struct {
 	abstractRegistryAPI confluentRegistryAPI.RegistryAPI
+	logger              *slog.Logger
 }
 
 // returnHandler creates and returns a new handler that implements registryAPICalls
 // It can be extended to accept configuration options like base URLs, credentials, etc.
-func ReturnHandler() *Handler {
-	return &Handler{}
+func ReturnHandler(logger *slog.Logger) *Handler {
+	return &Handler{
+		logger:              logger,
+		abstractRegistryAPI: *confluentRegistryAPI.ReturnRegistryAPI(logger),
+	}
 }
 
 type RegistryAPICalls interface {

@@ -7,12 +7,19 @@ import (
 	"kafka-board/helpers"
 	"kafka-board/types"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
 var baseRegistryURL = "http://schema-registry:8081"
 
-type RegistryAPI struct{}
+type RegistryAPI struct {
+	logger *slog.Logger
+}
+
+func ReturnRegistryAPI(logger *slog.Logger) *RegistryAPI {
+	return &RegistryAPI{logger: logger}
+}
 
 func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 	// Create HTTP client
@@ -61,11 +68,14 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 	for _, subjectName := range subjectNames {
 		// Create request with URL-encoded subject name
 		url := baseRegistryURL + "/config/" + subjectName
-		log.Printf("Requesting URL: %s", url)
+		r.logger.Debug("Requesting URL",
+			"url", url)
 
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			log.Printf("Error creating request: %v", err)
+			r.logger.Debug("Error creating request",
+				"error", err)
+
 			return nil, fmt.Errorf("error creating request: %v", err)
 		}
 
@@ -75,32 +85,43 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 		// Send request
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Printf("Error making request: %v", err)
+			r.logger.Debug("Error making request",
+				"error", err)
+
 			return nil, fmt.Errorf("error making request: %v", err)
 		}
 		defer resp.Body.Close()
 
 		// Check status code
 		if resp.StatusCode == http.StatusNotFound {
-			log.Printf("Subject config not found: %s", subjectName)
+			r.logger.Debug("Subject config not found",
+				"subject", subjectName)
+
 			config := types.SubjectGlobalConfig{
 				Name:               subjectName,
 				TakesGlobalDefault: true,
 			}
+
 			configs = append(configs, config)
+
 			continue
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			log.Printf("Unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+			r.logger.Debug("Unexpected status code",
+				"status", resp.StatusCode,
+				"body", string(body))
+
 			return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
 		}
 
 		// Read response body
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Error reading response: %v", err)
+			r.logger.Debug("Error reading response",
+				"error", err)
+
 			return nil, fmt.Errorf("error reading response: %v", err)
 		}
 
@@ -109,13 +130,21 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 			Name: subjectName,
 		}
 		if err := json.Unmarshal(body, &config); err != nil {
+			r.logger.Debug("Error parsing JSON",
+				"error", err)
+
 			return nil, fmt.Errorf("error parsing JSON: %v", err)
 		}
 		config.SetDefaultNone()
-		log.Printf("Config returned by returnSubjectConfigs for subject: %s", subjectName)
+		r.logger.Debug("Config returned by returnSubjectConfigs for subject",
+			"subject", subjectName)
+
 		configs = append(configs, config)
 	}
-	log.Printf("Configs returned by returnSubjectConfigs: %v", configs)
+
+	r.logger.Debug("Configs returned by returnSubjectConfigs",
+		"configs", configs)
+
 	return configs, nil
 }
 

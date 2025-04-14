@@ -20,7 +20,7 @@ func main() {
 	})
 	logger = slog.New(logggerHandler)
 
-	handler := handlers.ReturnHandler()
+	handler := handlers.ReturnHandler(logger)
 	// No options for now, can be extended later
 	http.HandleFunc("/", handler.HandleHomePage)
 	http.HandleFunc("/schema/", handler.HandleSchemaPage)

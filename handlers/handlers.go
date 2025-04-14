@@ -16,31 +16,39 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-//TODO: Add STRUCTURED logger
-
 // Handle the home page load
 func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	// First get all subjects
 	subjects, err := h.abstractRegistryAPI.ReturnSubjects()
+
 	if err != nil {
 		log.Println(err)
+		h.logger.Debug("HandleHomePage - Error fetching subjects", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
 	//Fetch Global Config
 	globalConfig, err := h.abstractRegistryAPI.GetGlobalConfig()
+
 	if err != nil {
 		log.Println(err)
+		h.logger.Debug("HandleHomePage - Error fetching global config",
+			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
 	// Then get configs for all subjects
 	configs, err := h.abstractRegistryAPI.ReturnSubjectConfigs(subjects)
+
 	if err != nil {
-		log.Println(err)
+		h.logger.Debug("HandleHomePage - Error fetching configs",
+			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -52,20 +60,29 @@ func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 		Configs:      configs,
 		GlobalConfig: globalConfig,
 	}
+
+	h.logger.Debug("HandleHomePage - Home page data",
+		"data", data)
+
 	t.Execute(w, data)
 }
 
 // Handle the schema page load
 func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
+
 	if subjectName == "" {
-		http.Error(w, "Subject name is required", http.StatusBadRequest)
+		h.logger.Debug("HandleSchemaPage - Subject name is required",
+			"error", "subjectName is an empty string")
+
 		return
 	}
 
 	schemas, err := h.abstractRegistryAPI.GetSchemas(subjectName)
 	if err != nil {
+		h.logger.Debug("HandleSchemaPage - Error fetching schemas", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -73,10 +90,14 @@ func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 		"formatJSON": func(s string) string {
 			var result interface{}
 			if err := json.Unmarshal([]byte(s), &result); err != nil {
+				h.logger.Debug("HandleSchemaPage - Error formatting JSON", "error", err)
+
 				return s // Return original string if not valid JSON
 			}
 			formatted, err := json.MarshalIndent(result, "", "    ")
 			if err != nil {
+				h.logger.Error("HandleSchemaPage - Error formatting JSON", "error", err)
+
 				return s // Return original string if formatting fails
 			}
 			return string(formatted)
@@ -91,6 +112,10 @@ func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 		SubjectName: subjectName,
 		Schemas:     schemas,
 	}
+
+	h.logger.Debug("HandleSchemaPage - Schema data",
+		"data", data)
+
 	t.Execute(w, data)
 }
 
@@ -114,7 +139,8 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	if subjectName == "" || version == "" || id == "" {
-		log.Printf("Missing required parameters: subjectName=%s, version=%s, id=%s", subjectName, version, id)
+		h.logger.Debug("HandleTestSchemaGet - Missing required parameters",
+			"error", "subjectName, version, or id is an empty string")
 		http.Error(w, "Missing required parameters", http.StatusBadRequest)
 		return
 	}
@@ -122,6 +148,8 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	// Get schemas for the subject
 	schemas, err := h.abstractRegistryAPI.GetSchemas(subjectName)
 	if err != nil {
+		h.logger.Debug("HandleTestSchemaGet - Error fetching schemas",
+			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -137,6 +165,8 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 
 	if targetSchema.Version == 0 {
 		http.Error(w, "Schema not found", http.StatusNotFound)
+		h.logger.Debug("HandleTestSchemaGet - Schema not found",
+			"error", "targetSchema.Version is 0 which is invalid")
 		return
 	}
 
@@ -145,10 +175,14 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 		"formatJSON": func(s string) string {
 			var result interface{}
 			if err := json.Unmarshal([]byte(s), &result); err != nil {
+				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
+					"error", err)
 				return s
 			}
 			formatted, err := json.MarshalIndent(result, "", "    ")
 			if err != nil {
+				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
+					"error", err)
 				return s
 			}
 			return string(formatted)
@@ -167,6 +201,9 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 		SchemaID:    id,
 		Schema:      targetSchema.Schema,
 	}
+	h.logger.Debug("HandleTestSchemaGet - Schema data",
+		"data", data)
+
 	t.Execute(w, data)
 }
 
@@ -189,6 +226,9 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 		)
 
+		h.logger.Debug("HandleTestSchemaPost - Error parsing JSON request",
+			"error", err)
+
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
 		return
@@ -202,6 +242,9 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 			http.StatusBadRequest,
 		)
+
+		h.logger.Debug("HandleTestSchemaPost - Missing required fields",
+			"error", "requestData.Subject, requestData.Version, requestData.Id, or requestData.JSON is an empty string")
 
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
@@ -218,6 +261,9 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest,
 		)
 
+		h.logger.Debug("HandleTestSchemaPost - Error parsing version number",
+			"error", err)
+
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
 		return
@@ -226,6 +272,9 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Test the schema
 	resp, err := h.abstractRegistryAPI.TestSchema(requestData.Subject, versionInt, requestData.JSON)
 	if helpers.CheckErr(err) {
+
+		h.logger.Debug("HandleTestSchemaPost - Error testing schema",
+			"error", err)
 
 		helpers.SendJSONResponse(w, http.StatusInternalServerError, resp)
 
@@ -236,6 +285,10 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	if resp.Message == "" {
 		resp.Message = "None"
 	}
+
+	h.logger.Debug("HandleTestSchemaPost - Schema test successful",
+		"message", resp.Message,
+		"status", resp.StatusCode)
 
 	helpers.SendJSONResponse(w, resp.StatusCode, resp)
 }
@@ -253,6 +306,9 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			http.StatusBadRequest,
 		)
 
+		h.logger.Debug("HandleValidatePayload - Error reading request body",
+			"error", err)
+
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
 		return
@@ -269,6 +325,9 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			http.StatusBadRequest,
 		)
 
+		h.logger.Debug("HandleValidatePayload - Invalid JSON format in request body",
+			"error", err)
+
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
 		return
@@ -282,6 +341,9 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			"payload key expected in request body",
 			http.StatusBadRequest,
 		)
+
+		h.logger.Debug("HandleValidatePayload - Payload key expected in request body",
+			"error", "payload key expected in request body")
 
 		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
@@ -303,6 +365,9 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 				http.StatusBadRequest,
 			)
 
+			h.logger.Debug("HandleValidatePayload - Value of payload key is not valid JSON",
+				"error", err)
+
 			helpers.SendJSONResponse(w, http.StatusBadRequest, response)
 
 			return
@@ -320,7 +385,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error retrieving schema: %v", err),
 			http.StatusInternalServerError,
 		)
-
+		h.logger.Debug("HandleValidatePayload - Error retrieving schema",
+			"error", err)
 		helpers.SendJSONResponse(w, http.StatusInternalServerError, response)
 
 		return
@@ -338,6 +404,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			fmt.Sprintf("Error validating against schema: %v", err),
 			http.StatusInternalServerError,
 		)
+		h.logger.Debug("HandleValidatePayload - Error validating against schema",
+			"error", err)
 
 		helpers.SendJSONResponse(w, http.StatusInternalServerError, response)
 
@@ -365,6 +433,10 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 			http.StatusOK,
 		)
 	}
+
+	h.logger.Debug("HandleValidatePayload - Validation result",
+		"valid", result.Valid(),
+		"errors", result.Errors())
 
 	helpers.SendJSONResponse(w, response.StatusCode, response)
 }
