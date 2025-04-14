@@ -10,7 +10,7 @@ all: build up
 ## Build the service
 build:
 	@echo "Building service..."
-	cd ../scr && $(GO_BUILD_FLAGS) go build -o $(SRV_BINARY) .
+	cd ../ && $(GO_BUILD_FLAGS) go build -o $(SRV_BINARY) .
 	@echo "Build complete!"
 
 ## Stop Docker services
@@ -22,7 +22,7 @@ down:
 ## Clean up build artifacts
 clean:
 	@echo "Cleaning up..."
-	rm -f ../scr/$(SRV_BINARY)
+	rm -f ../$(SRV_BINARY)
 	@echo "Clean complete!"
 
 ## Show help
@@ -35,11 +35,6 @@ up:
 	docker compose up --build -d
 	@echo "Docker images started!"
 
-## build_service: builds the service binary
-build_service:
-	@echo "Building service binary..."
-	cd ../scr && env GOOS=linux CGO_ENABLED=0 go build -o $(SRV_BINARY) .
-	@echo "Service binary built!"
 
 ## up_build: stops, builds, and starts containers
 up_build: down build
@@ -47,18 +42,4 @@ up_build: down build
 	docker compose up --build -d
 	@echo "Docker images built and started!"
 
-rebuild-board:
-	@echo "Stopping kafka-board container..."
-	docker compose stop kafka-board
-	@echo "Rebuilding kafka-board..."
-	docker compose build kafka-board
-	@echo "Starting kafka-board container..."
-	docker compose up -d kafka-board
-	@echo "Kafka-board rebuild complete!"
-
-help:
-	@echo 'Usage:'
-	@echo '  make <target>'
-	@echo ''
-	@echo 'Targets:'
-	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'
+ 

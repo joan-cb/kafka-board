@@ -12,9 +12,8 @@ RUN if [ ! -f go.mod ]; then \
     go mod tidy; \
     fi
 
-# Change to scr directory and build
-WORKDIR /app/scr
-RUN CGO_ENABLED=0 GOOS=linux go build -o ../main .
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # Final stage
 FROM alpine:latest
