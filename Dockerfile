@@ -8,7 +8,7 @@ COPY . .
 
 # Initialize go module if it doesn't exist
 RUN if [ ! -f go.mod ]; then \
-    go mod init fe-kafka-board && \
+    go mod init kafka-board && \
     go mod tidy; \
     fi
 
