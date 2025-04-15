@@ -1770,6 +1770,28 @@ function testPayload() {
     testButton2.textContent = 'Testing...';
     testButton2.disabled = true;
 
+    // Validate JSON input first
+    try {
+        // Just attempt to parse it to check for syntax validity
+        JSON.parse(testJsonText);
+    } catch (error) {
+        console.error("Invalid JSON!", error);
+        
+        // Reset button state
+        testButton2.textContent = originalButtonText;
+        testButton2.disabled = false;
+        
+        // Display validation error to the user
+        displayValidationResult({
+            is_valid: false,
+            http_status: 400,
+            error_code: "INVALID_JSON",
+            message: "Invalid JSON format: " + error.message
+        });
+        
+        return;
+    }
+
     // Prepare the request
     const url = '/test-payload?id=' + encodeURIComponent(id);
     const requestBody = JSON.stringify({
@@ -1819,6 +1841,27 @@ function testPayload() {
     const originalButtonText = testButton.textContent;
     testButton.textContent = 'Testing...';
     testButton.disabled = true;
+
+    let parsedJson;
+    try {
+        parsedJson = JSON.parse(testJsonText);
+    } catch (error) {
+        console.error("Invalid JSON!", error);
+        
+        // Reset button state
+        testButton.textContent = originalButtonText;
+        testButton.disabled = false;
+        
+        // Display validation error to the user
+        displayValidationResult({
+            is_compatible: false,
+            http_status: 400,
+            error_code: "INVALID_JSON",
+            message: "Invalid JSON format: " + error.message
+        });
+        
+        return;
+    }
     
     fetch('/test-schema/', {
         method: 'POST',
@@ -1829,7 +1872,7 @@ function testPayload() {
             subject: subject,
             version: version,
             id: id,
-            json: testJsonText
+            json: parsedJson
         })
     })
     .then(response => response.json())
