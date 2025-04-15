@@ -494,14 +494,8 @@
     <script>
         // Wait for DOM to be fully loaded before attaching event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('testButton').addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent any form submission
-                testSchema();
-            });
-            document.getElementById('testButton2').addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent any form submission
-                testPayload();
-            });
+            document.getElementById('testButton').addEventListener('click', testSchema);
+            document.getElementById('testButton2').addEventListener('click', testPayload);
         });
         
         // Shared function to display validation results for both schema and payload tests
@@ -524,12 +518,12 @@
             let statusBadgeClass = "icon-badge-none";
             // Handle both numeric status codes and string status messages
             if (typeof data.http_status === 'number') {
-                if (data.http_status >= 400) {
-                    statusBadgeClass = "icon-badge-false";
-                } else if (data.http_status >= 300) {
-                    statusBadgeClass = "icon-badge-warning";
-                } else if (data.http_status >= 200) {
-                    statusBadgeClass = "icon-badge-true";
+            if (data.http_status >= 400) {
+                statusBadgeClass = "icon-badge-false";
+            } else if (data.http_status >= 300) {
+                statusBadgeClass = "icon-badge-warning";
+            } else if (data.http_status >= 200) {
+                statusBadgeClass = "icon-badge-true";
                 }
             } else if (data.http_status === "Request not sent") {
                 statusBadgeClass = "icon-badge-warning";
@@ -541,7 +535,7 @@
                 errorBadgeClass = "icon-badge-false";
             } else if (typeof data.error_code === 'string') {
                 if (data.error_code === "SCHEMA_VALIDATION_SUCCESS") {
-                    errorBadgeClass = "icon-badge-true";
+                errorBadgeClass = "icon-badge-true";
                 } else if (data.error_code === "INVALID_JSON") {
                     errorBadgeClass = "icon-badge-warning";
                 } else {
@@ -603,8 +597,6 @@ function testPayload() {
     const testJsonText = document.getElementById('testJson').value;
     const id = "{{.SchemaID}}";  // Use the template variable, not hardcoded "1"
     
-    console.log("testPayload called with ID:", id);
-    
     // Show loading state
     const testButton2 = document.getElementById('testButton2');
     const originalButtonText = testButton2.textContent;
@@ -639,9 +631,6 @@ function testPayload() {
         payload: testJsonText
     });
     
-    console.log("Making fetch request to:", url);
-    console.log("Request body:", requestBody);
-    
     // Make the request
     fetch(url, {
         method: 'POST',
@@ -650,13 +639,8 @@ function testPayload() {
         },
         body: requestBody
     })
-    .then(response => {
-        console.log("Response received:", response.status, response.statusText);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log("Response data:", data);
-        
         // Reset button state
         testButton2.textContent = originalButtonText;
         testButton2.disabled = false;
@@ -691,8 +675,6 @@ function testPayload() {
     const subject = "{{.SubjectName}}";
     const version = "{{.Version}}";
     const id = "{{.SchemaID}}";
-    
-    console.log("testSchema called with subject:", subject, "version:", version, "id:", id);
 
     // Show loading state
     const testButton = document.getElementById('testButton');
@@ -721,30 +703,20 @@ function testPayload() {
         return;
     }
     
-    const payload = {
-        subject: subject,
-        version: version,
-        id: id,
-        json: parsedJson
-    };
-    
-    console.log("Making fetch request to: /test-schema/");
-    console.log("Request payload:", payload);
-    
     fetch('/test-schema/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+            subject: subject,
+            version: version,
+            id: id,
+            json: parsedJson
+        })
     })
-    .then(response => {
-        console.log("Response received:", response.status, response.statusText);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log("Response data:", data);
-        
         // Reset button
         testButton.textContent = originalButtonText;
         testButton.disabled = false;

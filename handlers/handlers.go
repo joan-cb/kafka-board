@@ -211,20 +211,35 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 // Handle the test schema post request for testing the compatibility of a new schema against existing schema
 func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
-	var requestData struct {
-		Subject string `json:"subject"`
-		Version string `json:"version"`
-		Id      string `json:"id"`
-		JSON    string `json:"json"`
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&requestData)
+	body, err := io.ReadAll(r.Body)
 	if helpers.CheckErr(err) {
 		response := helpers.CreateResponseObject(
-			nil,
+			&falseVal,
+			fmt.Sprintf("Error reading request body: %v", err),
+			http.StatusBadRequest,
+			0,
+		)
+
+		h.logger.Debug("HandleValidatePayload - Error reading request body",
+			"error", err)
+
+		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
+
+		return
+	}
+	var requestData struct {
+		Subject string      `json:"subject"`
+		Version string      `json:"version"`
+		Id      string      `json:"id"`
+		JSON    interface{} `json:"json"`
+	}
+	err = json.Unmarshal(body, &requestData)
+	if helpers.CheckErr(err) {
+		response := helpers.CreateResponseObject(
+			&falseVal,
 			fmt.Sprintf("Error parsing JSON request: %v", err),
 			http.StatusBadRequest,
-			http.StatusBadRequest,
+			0,
 		)
 
 		h.logger.Debug("HandleTestSchemaPost - Error parsing JSON request",
@@ -275,8 +290,24 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 		"version", versionInt,
 		"json", requestData.JSON)
 
+	jsonString, err := json.Marshal(requestData.JSON)
+	if helpers.CheckErr(err) {
+		response := helpers.CreateResponseObject(
+			nil,
+			fmt.Sprintf("Error marshalling JSON: %v", err),
+			http.StatusBadRequest,
+			0,
+		)
+
+		h.logger.Debug("HandleTestSchemaPost - Error marshalling JSON",
+			"error", err)
+
+		helpers.SendJSONResponse(w, http.StatusBadRequest, response)
+
+		return
+	}
 	// Test the schema
-	resp, err := h.abstractRegistryAPI.TestSchema(requestData.Subject, versionInt, requestData.JSON)
+	resp, err := h.abstractRegistryAPI.TestSchema(requestData.Subject, versionInt, string(jsonString))
 	if helpers.CheckErr(err) {
 
 		h.logger.Debug("HandleTestSchemaPost - Error testing schema",
