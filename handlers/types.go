@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"kafka-board/confluentRegistryAPI"
+	"kafka-board/helpers"
 	"kafka-board/types"
 	"log/slog"
 )
@@ -9,6 +10,7 @@ import (
 type Handler struct {
 	abstractRegistryAPI confluentRegistryAPI.RegistryAPI
 	logger              *slog.Logger
+	helpers             *helpers.Helpers
 }
 
 // returnHandler creates and returns a new handler that implements registryAPICalls
@@ -17,6 +19,7 @@ func ReturnHandler(logger *slog.Logger) *Handler {
 	return &Handler{
 		logger:              logger,
 		abstractRegistryAPI: *confluentRegistryAPI.ReturnRegistryAPI(logger),
+		helpers:             helpers.ReturnHelpers(logger),
 	}
 }
 

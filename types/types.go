@@ -61,12 +61,6 @@ type Response struct {
 	StatusCode   int    `json:"http_status"`
 }
 
-// type PayloadTestResponse struct {
-// 	IsCompatible bool   `json:"is_compatible"`
-// 	Message      string `json:"message"`
-// 	StatusCode   int    `json:"http_status"`
-// }
-
 // SetDefaultNone sets "None" for any unpopulated string fields in the SubjectConfig
 func (sc *SubjectConfig) SetDefaultNone() {
 	if sc.Name == "" {

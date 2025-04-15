@@ -240,10 +240,11 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 
 	//validate JSON and transform to Schema Registry format
 	// Transform JSON to Schema Registry format
-	payload, err := helpers.TransformJSONToSchemaFormat(testJSON)
+	helper := helpers.ReturnHelpers(r.logger)
+	payload, err := helper.TransformJSONToSchemaFormat(testJSON)
 	if err != nil {
 		log.Printf("Error transforming JSON to Schema Registry format: %v", err)
-		resp := helpers.CreateResponse(nil, fmt.Sprintf("Error transforming JSON to Schema Registry format. Invalid JSON string: %v", err), http.StatusBadRequest, http.StatusBadRequest)
+		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error transforming JSON to Schema Registry format. Invalid JSON string: %v", err), http.StatusBadRequest, http.StatusBadRequest)
 		return resp, err
 	}
 	log.Printf("Transformed JSON returned by transformJSONToSchemaFormat: %s", payload)
@@ -251,7 +252,7 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 	req, err := helpers.CreateTestSchemaRequest(subjectName, version, payload)
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
-		resp := helpers.CreateResponse(nil, fmt.Sprintf("Error creating request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error creating request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
@@ -259,7 +260,7 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 	resp, err := helpers.MakeHTTPRequest(req)
 	if err != nil {
 		log.Printf("Error making request: %v", err)
-		resp := helpers.CreateResponse(nil, fmt.Sprintf("Error making request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error making request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
@@ -267,15 +268,15 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 	body, err := helpers.ReadResponseBody(resp)
 	if err != nil {
 		log.Printf("Error reading response: %v", err)
-		resp := helpers.CreateResponse(nil, fmt.Sprintf("Error reading response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error reading response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
 	// Process the response
-	result, err := helpers.ProcessCompatibilityResponse(body, resp.StatusCode)
+	result, err := helper.ProcessResponse(body, resp.StatusCode)
 	if err != nil {
 		log.Printf("Error processing response: %v", err)
-		resp := helpers.CreateResponse(nil, fmt.Sprintf("Error processing response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
+		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error processing response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
@@ -291,7 +292,7 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 
 	// Handle nil IsCompatible pointer - this means the compatibility couldn't be determined
 	if result.IsCompatible == nil {
-		resp := helpers.CreateResponse(nil, result.Message, result.StatusCode, result.ErrorCode)
+		resp := helpers.CreateResponseObject(nil, result.Message, result.StatusCode, result.ErrorCode)
 		return resp, nil
 	}
 

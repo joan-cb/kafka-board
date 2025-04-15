@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,8 +11,6 @@ import (
 
 	"kafka-board/helpers"
 	"kafka-board/types"
-
-	"github.com/xeipuuv/gojsonschema"
 )
 
 var falseVal = false
@@ -21,11 +18,11 @@ var trueVal = true
 
 // Handle the home page load
 func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
+
 	// First get all subjects
 	subjects, err := h.abstractRegistryAPI.ReturnSubjects()
 
 	if err != nil {
-		log.Println(err)
 		h.logger.Debug("HandleHomePage - Error fetching subjects", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -36,7 +33,6 @@ func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	globalConfig, err := h.abstractRegistryAPI.GetGlobalConfig()
 
 	if err != nil {
-		log.Println(err)
 		h.logger.Debug("HandleHomePage - Error fetching global config",
 			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -144,7 +140,9 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	if subjectName == "" || version == "" || id == "" {
 		h.logger.Debug("HandleTestSchemaGet - Missing required parameters",
 			"error", "subjectName, version, or id is an empty string")
+
 		http.Error(w, "Missing required parameters", http.StatusBadRequest)
+
 		return
 	}
 
@@ -222,7 +220,7 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			nil,
 			fmt.Sprintf("Error parsing JSON request: %v", err),
 			http.StatusBadRequest,
@@ -239,7 +237,7 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 
 	// Validate required fields
 	if requestData.Subject == "" || requestData.Version == "" || requestData.Id == "" || requestData.JSON == "" {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			nil,
 			"Missing required fields",
 			http.StatusBadRequest,
@@ -257,7 +255,7 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Convert version to integer
 	versionInt, err := strconv.Atoi(requestData.Version)
 	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			nil,
 			fmt.Sprintf("Error parsing version number: %v", err),
 			http.StatusBadRequest,
@@ -271,6 +269,11 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	h.logger.Debug("HandleTestSchemaPost - Testing schema",
+		"subject", requestData.Subject,
+		"version", versionInt,
+		"json", requestData.JSON)
 
 	// Test the schema
 	resp, err := h.abstractRegistryAPI.TestSchema(requestData.Subject, versionInt, requestData.JSON)
@@ -303,7 +306,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	// Read and validate request body
 	body, err := io.ReadAll(r.Body)
 	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			&falseVal,
 			fmt.Sprintf("Error reading request body: %v", err),
 			http.StatusBadRequest,
@@ -323,7 +326,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	err = json.Unmarshal(body, &unmarshalledBody)
 
 	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			&falseVal,
 			fmt.Sprintf("Invalid JSON format in request body: %v", err),
 			http.StatusBadRequest,
@@ -341,7 +344,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	// Ensure payload key exists
 	payloadRaw, ok := unmarshalledBody["payload"]
 	if !ok {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			&falseVal,
 			"payload key expected in request body",
 			http.StatusBadRequest,
@@ -365,7 +368,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 		err = json.Unmarshal([]byte(payloadStr), &payload)
 
 		if helpers.CheckErr(err) {
-			response := helpers.CreateResponse(
+			response := helpers.CreateResponseObject(
 				&falseVal,
 				fmt.Sprintf("value of payload key is not valid JSON: %v", err),
 				http.StatusBadRequest,
@@ -387,7 +390,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	// Get the schema
 	schema, err := h.abstractRegistryAPI.GetSchema(id)
 	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+		response := helpers.CreateResponseObject(
 			&falseVal,
 			fmt.Sprintf("Error retrieving schema: %v", err),
 			http.StatusInternalServerError,
@@ -400,21 +403,18 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Create schema loader and validate
-	schemaLoader := gojsonschema.NewStringLoader(schema.Schema)
-	documentLoader := gojsonschema.NewGoLoader(payload)
+	isValid, errors, err := helpers.ValidatePayload(payload, schema)
 
-	// Perform validation
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	if helpers.CheckErr(err) {
-		response := helpers.CreateResponse(
+	if err != nil {
+		h.logger.Debug("HandleValidatePayload - Error validating payload",
+			"error", err)
+
+		response := helpers.CreateResponseObject(
 			&falseVal,
-			fmt.Sprintf("Error validating against schema: %v", err),
+			fmt.Sprintf("Error validating payload: %v", err),
 			http.StatusInternalServerError,
 			0,
 		)
-		h.logger.Debug("HandleValidatePayload - Error validating against schema",
-			"error", err)
 
 		helpers.SendJSONResponse(w, http.StatusInternalServerError, response)
 
@@ -423,21 +423,19 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 
 	// Create response based on validation result
 	var response types.Response
-	if !result.Valid() {
+	if !isValid {
 		// Collect validation errors
 		var errorMessages []string
-		for _, err := range result.Errors() {
-			errorMessages = append(errorMessages, err.String())
-		}
+		errorMessages = append(errorMessages, errors...)
 
-		response = helpers.CreateResponse(
+		response = helpers.CreateResponseObject(
 			&falseVal,
 			strings.Join(errorMessages, "; "),
 			http.StatusOK,
 			0,
 		)
 	} else {
-		response = helpers.CreateResponse(
+		response = helpers.CreateResponseObject(
 			&trueVal,
 			"Payload validates against schema",
 			http.StatusOK,
@@ -446,8 +444,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	}
 
 	h.logger.Debug("HandleValidatePayload - Validation result",
-		"valid", result.Valid(),
-		"errors", result.Errors())
+		"valid", isValid,
+		"errors", errors)
 
 	helpers.SendJSONResponse(w, response.StatusCode, response)
 }
