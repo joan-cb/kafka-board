@@ -26,6 +26,6 @@ type RegistryAPICalls interface {
 	returnSubjectConfigs(subjectNames []string) ([]types.SubjectConfigInterface, error)
 	GetGlobalConfig() (types.GlobalConfig, error)
 	GetSchemas(subjectName string) ([]types.Schema, error)
-	TestSchema(subjectName string, version int, testJSON string) (types.SchemaRegistryResponse, error)
+	TestSchema(subjectName string, version int, testJSON string) (types.Response, error)
 	GetSchema(id string) (types.Schema, error)
 }

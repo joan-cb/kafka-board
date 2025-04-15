@@ -54,18 +54,18 @@ func (sgc SubjectGlobalConfig) GetName() string {
 	return sgc.Name
 }
 
-type SchemaRegistryResponse struct {
+type Response struct {
 	IsCompatible *bool  `json:"is_compatible"`
 	ErrorCode    int    `json:"error_code"`
 	Message      string `json:"message"`
 	StatusCode   int    `json:"http_status"`
 }
 
-type PayloadTestResponse struct {
-	IsCompatible bool   `json:"is_compatible"`
-	Message      string `json:"message"`
-	StatusCode   int    `json:"http_status"`
-}
+// type PayloadTestResponse struct {
+// 	IsCompatible bool   `json:"is_compatible"`
+// 	Message      string `json:"message"`
+// 	StatusCode   int    `json:"http_status"`
+// }
 
 // SetDefaultNone sets "None" for any unpopulated string fields in the SubjectConfig
 func (sc *SubjectConfig) SetDefaultNone() {
