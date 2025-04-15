@@ -371,7 +371,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 
 		return
 	}
-
+	h.logger.Debug("HandleValidatePayload - Unmarshalled body",
+		"body", unmarshalledBody)
 	// Ensure payload key exists
 	payloadRaw, ok := unmarshalledBody["payload"]
 	if !ok {
