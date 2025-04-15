@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"kafka-board/handlers"
+	"kafka-board/helpers"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,11 +17,11 @@ var logger *slog.Logger
 
 func main() {
 	// Initialize logger
-	logger = setupLogger()
+	logger = helpers.SetupLogger()
 
 	// Create server with timeouts
 	server := &http.Server{
-		Addr:         getServerAddress(),
+		Addr:         helpers.GetServerAddress(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -33,7 +34,7 @@ func main() {
 	http.HandleFunc("/", handler.HandleHomePage)
 	http.HandleFunc("/schema/", handler.HandleSchemaPage)
 	http.HandleFunc("/test-schema/", handler.HandleTestSchema)
-	http.HandleFunc("/health", healthCheck)
+	http.HandleFunc("/health", handler.HandleHealthCheck)
 	http.HandleFunc("/test-payload", handler.HandleValidatePayload)
 
 	// Channel to listen for errors coming from the listener.
@@ -69,38 +70,4 @@ func main() {
 			server.Close()
 		}
 	}
-}
-
-func setupLogger() *slog.Logger {
-	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: getLogLevel(),
-	}))
-}
-
-func getLogLevel() slog.Level {
-	switch os.Getenv("LOG_LEVEL") {
-	case "DEBUG":
-		return slog.LevelDebug
-	case "INFO":
-		return slog.LevelInfo
-	case "WARN":
-		return slog.LevelWarn
-	case "ERROR":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
-	}
-}
-
-func getServerAddress() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "9080"
-	}
-	return ":" + port
-}
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	logger.Info("Health check received")
-	w.WriteHeader(http.StatusOK)
 }

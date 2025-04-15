@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 
 	"kafka-board/types"
@@ -192,4 +194,33 @@ func CreateSchemaRegistryResponse(isCompatible *bool, message string, httpStatus
 // CheckErr is a helper function to check if an error is present
 func CheckErr(e error) bool {
 	return e != nil
+}
+
+func SetupLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: getLogLevel(),
+	}))
+}
+
+func GetLogLevel() slog.Level {
+	switch os.Getenv("LOG_LEVEL") {
+	case "DEBUG":
+		return slog.LevelDebug
+	case "INFO":
+		return slog.LevelInfo
+	case "WARN":
+		return slog.LevelWarn
+	case "ERROR":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
+
+func GetServerAddress() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9080"
+	}
+	return ":" + port
 }

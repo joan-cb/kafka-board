@@ -440,3 +440,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 
 	helpers.SendJSONResponse(w, response.StatusCode, response)
 }
+
+func (h *Handler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	h.logger.Debug("HandleHealthCheck - Health check received")
+	w.WriteHeader(http.StatusOK)
+}
