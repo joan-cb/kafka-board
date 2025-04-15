@@ -1688,49 +1688,67 @@ var testSchemaTemplate string = `<!DOCTYPE html>
             // Determine badge classes based on response values
             let compatibilityBadgeClass = "icon-badge-none";
             
-            // Handle both is_compatible (from schema testing) and is_valid (from payload testing)
-            if (data.is_compatible === true || data.is_valid === true) {
+            // Handle is_compatible from both schema and payload testing
+            if (data.is_compatible === true) {
                 compatibilityBadgeClass = "icon-badge-true";
-            } else if (data.is_compatible === false || data.is_valid === false) {
+            } else if (data.is_compatible === false) {
                 compatibilityBadgeClass = "icon-badge-false";
+            } else if (data.is_compatible === "Invalid Request") {
+                // Special case for validation errors
+                compatibilityBadgeClass = "icon-badge-warning";
             } else {
                 compatibilityBadgeClass = "icon-badge-warning";
             }
 
             let statusBadgeClass = "icon-badge-none";
-            if (data.http_status >= 400) {
-                statusBadgeClass = "icon-badge-false";
-            } else if (data.http_status >= 300) {
+            // Handle both numeric status codes and string status messages
+            if (typeof data.http_status === 'number') {
+                if (data.http_status >= 400) {
+                    statusBadgeClass = "icon-badge-false";
+                } else if (data.http_status >= 300) {
+                    statusBadgeClass = "icon-badge-warning";
+                } else if (data.http_status >= 200) {
+                    statusBadgeClass = "icon-badge-true";
+                }
+            } else if (data.http_status === "Request not sent") {
                 statusBadgeClass = "icon-badge-warning";
-            } else if (data.http_status >= 200) {
-                statusBadgeClass = "icon-badge-true";
             }
 
             let errorBadgeClass = "icon-badge-none";
             // Handle both numeric and string error codes
             if (typeof data.error_code === 'number' && data.error_code > 0) {
                 errorBadgeClass = "icon-badge-false";
-            } else if (typeof data.error_code === 'string' && data.error_code !== "SCHEMA_VALIDATION_SUCCESS") {
-                errorBadgeClass = "icon-badge-false";
-            } else if (data.error_code === "SCHEMA_VALIDATION_SUCCESS") {
-                errorBadgeClass = "icon-badge-true";
+            } else if (typeof data.error_code === 'string') {
+                if (data.error_code === "SCHEMA_VALIDATION_SUCCESS") {
+                    errorBadgeClass = "icon-badge-true";
+                } else if (data.error_code === "INVALID_JSON") {
+                    errorBadgeClass = "icon-badge-warning";
+                } else {
+                    errorBadgeClass = "icon-badge-false";
+                }
             }
 
             let messageBadgeClass = "icon-badge-none";
             if (data.message && data.message !== "None") {
-                if (data.is_compatible === false || data.is_valid === false) {
+                if (data.is_compatible === false) {
                     messageBadgeClass = "icon-badge-false";
-                } else if (data.is_compatible === true || data.is_valid === true) {
+                } else if (data.is_compatible === true) {
                     messageBadgeClass = "icon-badge-true";
+                } else if (data.message.includes("Invalid JSON")) {
+                    messageBadgeClass = "icon-badge-warning";
                 }
             }
             
-            // Update the compatibility result with appropriate text based on test type
+            // Update the compatibility result with appropriate text
             let compatText = 'Unknown';
-            if (data.is_compatible !== undefined) {
-                compatText = data.is_compatible === true ? 'Compatible' : 'Not Compatible';
-            } else if (data.is_valid !== undefined) {
-                compatText = data.is_valid === true ? 'Valid' : 'Not Valid';
+            if (data.is_compatible === true) {
+                compatText = 'Compatible';
+            } else if (data.is_compatible === false) {
+                compatText = 'Not Compatible';
+            } else if (data.is_compatible === "Invalid Request") {
+                compatText = 'Invalid JSON Input';
+            } else {
+                compatText = 'Undefined';
             }
             
             document.getElementById('compatibilityResult').innerHTML = 
@@ -1783,8 +1801,8 @@ function testPayload() {
         
         // Display validation error to the user
         displayValidationResult({
-            is_valid: false,
-            http_status: 400,
+            is_compatible: "Invalid Request",
+            http_status: "Request not sent",
             error_code: "INVALID_JSON",
             message: "Invalid JSON format: " + error.message
         });
@@ -1812,6 +1830,12 @@ function testPayload() {
         testButton2.textContent = originalButtonText;
         testButton2.disabled = false;
         
+        // Map is_valid to is_compatible for consistency 
+        // if the server returns is_valid instead of is_compatible
+        if (data.is_valid !== undefined && data.is_compatible === undefined) {
+            data.is_compatible = data.is_valid;
+        }
+        
         // Let the display function handle the response as-is
         displayValidationResult(data);
     })
@@ -1825,6 +1849,7 @@ function testPayload() {
         displayValidationResult({
             is_compatible: false,
             http_status: 500,
+            error_code: "NETWORK_ERROR", 
             message: "Network or parsing error occurred"
         });
     });
@@ -1854,8 +1879,8 @@ function testPayload() {
         
         // Display validation error to the user
         displayValidationResult({
-            is_compatible: false,
-            http_status: 400,
+            is_compatible: "Invalid Request",
+            http_status: "Request not sent",
             error_code: "INVALID_JSON",
             message: "Invalid JSON format: " + error.message
         });
@@ -1881,6 +1906,12 @@ function testPayload() {
         testButton.textContent = originalButtonText;
         testButton.disabled = false;
         
+        // Map is_valid to is_compatible for consistency 
+        // if the server returns is_valid instead of is_compatible
+        if (data.is_valid !== undefined && data.is_compatible === undefined) {
+            data.is_compatible = data.is_valid;
+        }
+        
         // Use the shared displayValidationResult function with data as-is
         displayValidationResult(data);
     })
@@ -1894,6 +1925,7 @@ function testPayload() {
         displayValidationResult({
             is_compatible: false,
             http_status: 500,
+            error_code: "NETWORK_ERROR",
             message: "Network or parsing error occurred"
         });
     });
