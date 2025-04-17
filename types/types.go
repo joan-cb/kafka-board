@@ -61,6 +61,17 @@ type Response struct {
 	StatusCode   int    `json:"http_status"`
 }
 
+// SchemaRegistryResponse is an alias for Response to maintain compatibility with existing code
+type SchemaRegistryResponse Response
+
+// PayloadTestResponse is used in test files to parse validation responses
+type PayloadTestResponse struct {
+	IsCompatible bool   `json:"is_compatible"`
+	HttpStatus   int    `json:"http_status"`
+	ErrorCode    string `json:"error_code"`
+	Message      string `json:"message"`
+}
+
 // SetDefaultNone sets "None" for any unpopulated string fields in the SubjectConfig
 func (sc *SubjectConfig) SetDefaultNone() {
 	if sc.Name == "" {

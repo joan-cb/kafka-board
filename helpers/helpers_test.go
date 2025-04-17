@@ -1,5 +1,10 @@
 package helpers
 
+// import (
+// 	"io"
+// 	"testing"
+// )
+
 // func TestCreateTestSchemaRequest(t *testing.T) {
 // 	// Save original baseRegistryURL and restore after test
 // 	originalURL := baseRegistryURL
