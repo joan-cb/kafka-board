@@ -16,23 +16,24 @@ import (
 var falseVal = false
 var trueVal = true
 
-// Handle the home page load
-func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
+// Page load handler for the home page
+func (h *handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 
 	// First get all subjects
-	subjects, err := h.abstractRegistryAPI.ReturnSubjects()
+	subjects, err := h.registryAPI.ReturnSubjects()
 
-	if err != nil {
-		h.logger.Debug("HandleHomePage - Error fetching subjects", "error", err)
+	if helpers.CheckErr(err) {
+		h.logger.Debug("HandleHomePage - Error fetching subjects",
+			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
 
 	//Fetch Global Config
-	globalConfig, err := h.abstractRegistryAPI.GetGlobalConfig()
+	globalConfig, err := h.registryAPI.GetGlobalConfig()
 
-	if err != nil {
+	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleHomePage - Error fetching global config",
 			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -41,9 +42,9 @@ func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Then get configs for all subjects
-	configs, err := h.abstractRegistryAPI.ReturnSubjectConfigs(subjects)
+	configs, err := h.registryAPI.ReturnSubjectConfigs(subjects)
 
-	if err != nil {
+	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleHomePage - Error fetching configs",
 			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -66,8 +67,8 @@ func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
-// Handle the schema page load
-func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
+// Page load handler for the schema page
+func (h *handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 
 	if subjectName == "" {
@@ -77,9 +78,10 @@ func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schemas, err := h.abstractRegistryAPI.GetSchemas(subjectName)
-	if err != nil {
-		h.logger.Debug("HandleSchemaPage - Error fetching schemas", "error", err)
+	schemas, err := h.registryAPI.GetSchemas(subjectName)
+	if helpers.CheckErr(err) {
+		h.logger.Debug("HandleSchemaPage - Error fetching schemas",
+			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -88,14 +90,16 @@ func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	funcMap := template.FuncMap{
 		"formatJSON": func(s string) string {
 			var result interface{}
-			if err := json.Unmarshal([]byte(s), &result); err != nil {
-				h.logger.Debug("HandleSchemaPage - Error formatting JSON", "error", err)
+			if helpers.CheckErr(json.Unmarshal([]byte(s), &result)) {
+				h.logger.Debug("HandleSchemaPage - Error formatting JSON",
+					"error", err)
 
 				return s // Return original string if not valid JSON
 			}
 			formatted, err := json.MarshalIndent(result, "", "    ")
-			if err != nil {
-				h.logger.Error("HandleSchemaPage - Error formatting JSON", "error", err)
+			if helpers.CheckErr(err) {
+				h.logger.Error("HandleSchemaPage - Error formatting JSON",
+					"error", err)
 
 				return s // Return original string if formatting fails
 			}
@@ -118,8 +122,8 @@ func (h *Handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
-// Internal handler
-func (h *Handler) HandleTestSchema(w http.ResponseWriter, r *http.Request) {
+// Redirect handler for the test schema page to the appropriate handler based on the HTTP method
+func (h *handler) HandleTestSchema(w http.ResponseWriter, r *http.Request) {
 	// Route to appropriate handler based on HTTP method
 	switch r.Method {
 	case http.MethodGet:
@@ -131,8 +135,8 @@ func (h *Handler) HandleTestSchema(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handle the test schema page load
-func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
+// Page load handler for the test schema page
+func (h *handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	subjectName := r.URL.Query().Get("topic")
 	version := r.URL.Query().Get("version")
 	id := r.URL.Query().Get("id")
@@ -147,8 +151,8 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get schemas for the subject
-	schemas, err := h.abstractRegistryAPI.GetSchemas(subjectName)
-	if err != nil {
+	schemas, err := h.registryAPI.GetSchemas(subjectName)
+	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleTestSchemaGet - Error fetching schemas",
 			"error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -166,8 +170,10 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 
 	if targetSchema.Version == 0 {
 		http.Error(w, "Schema not found", http.StatusNotFound)
+
 		h.logger.Debug("HandleTestSchemaGet - Schema not found",
 			"error", "targetSchema.Version is 0 which is invalid")
+
 		return
 	}
 
@@ -175,13 +181,13 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	funcMap := template.FuncMap{
 		"formatJSON": func(s string) string {
 			var result interface{}
-			if err := json.Unmarshal([]byte(s), &result); err != nil {
+			if helpers.CheckErr(json.Unmarshal([]byte(s), &result)) {
 				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
 					"error", err)
 				return s
 			}
 			formatted, err := json.MarshalIndent(result, "", "    ")
-			if err != nil {
+			if helpers.CheckErr(err) {
 				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
 					"error", err)
 				return s
@@ -208,8 +214,8 @@ func (h *Handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
-// Handle the test schema post request for testing the compatibility of a new schema against existing schema
-func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
+// Handler for testing the compatibility of a new schema against existing schema
+func (h *handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
 	body, err := io.ReadAll(r.Body)
 	if helpers.CheckErr(err) {
@@ -307,7 +313,7 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Test the schema
-	resp, err := h.abstractRegistryAPI.TestSchema(requestData.Subject, versionInt, string(jsonString))
+	resp, err := h.registryAPI.TestSchema(requestData.Subject, versionInt, string(jsonString))
 	if helpers.CheckErr(err) {
 
 		h.logger.Debug("HandleTestSchemaPost - Error testing schema",
@@ -330,8 +336,8 @@ func (h *Handler) HandleTestSchemaPost(w http.ResponseWriter, r *http.Request) {
 	helpers.SendJSONResponse(w, resp.StatusCode, resp)
 }
 
-// Called from the schema page to validate a payload against a schema
-func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) {
+// Handler for validating a payload against a schema
+func (h *handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	// Read and validate request body
@@ -420,7 +426,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get the schema
-	schema, err := h.abstractRegistryAPI.GetSchema(id)
+	schema, err := h.registryAPI.GetSchema(id)
 	if helpers.CheckErr(err) {
 		response := helpers.CreateResponseObject(
 			&falseVal,
@@ -437,7 +443,7 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 
 	isValid, errors, err := helpers.ValidatePayload(payload, schema)
 
-	if err != nil {
+	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleValidatePayload - Error validating payload",
 			"error", err)
 
@@ -482,7 +488,8 @@ func (h *Handler) HandleValidatePayload(w http.ResponseWriter, r *http.Request) 
 	helpers.SendJSONResponse(w, response.StatusCode, response)
 }
 
-func (h *Handler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
+// Handler for the health check endpoint
+func (h *handler) HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	h.logger.Debug("HandleHealthCheck - Health check received")
 	w.WriteHeader(http.StatusOK)
 }

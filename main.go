@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"kafka-board/confluentRegistryAPI"
 	"kafka-board/handlers"
 	"kafka-board/helpers"
 	"log/slog"
@@ -28,7 +29,7 @@ func main() {
 	}
 
 	// Initialize handler with logger
-	handler := handlers.ReturnHandler(logger)
+	handler := handlers.ReturnHandler(logger, confluentRegistryAPI.ReturnRegistryAPI(logger))
 
 	// Set up routes
 	http.HandleFunc("/", handler.HandleHomePage)
