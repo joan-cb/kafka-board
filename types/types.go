@@ -1,5 +1,6 @@
 package types
 
+// Schema is the struct for the schema registry schema model
 type Schema struct {
 	Name       string `json:"name"`
 	Subject    string `json:"subject"`
@@ -9,6 +10,7 @@ type Schema struct {
 	Schema     string `json:"schema"`
 }
 
+// SubjectConfig is the struct for the subject config model
 type SubjectConfig struct {
 	Name               string `json:"name"`
 	Normalize          *bool  `json:"normalize"`
@@ -21,12 +23,13 @@ type SubjectConfig struct {
 	OverrideRuleSet    any    `json:"overrideRuleSet"`
 }
 
+// SubjectGlobalConfig is the struct for subjects inheriting from the global config model
 type SubjectGlobalConfig struct {
 	Name               string `json:"name"`
 	TakesGlobalDefault bool   `json:"takesGlobalDefault"`
 }
 
-// to do: handle values of type any in the UI
+// GlobalConfig is the struct for the global config model
 type GlobalConfig struct {
 	Name               string `json:"name"`
 	Normalize          *bool  `json:"normalize"`
@@ -40,6 +43,7 @@ type GlobalConfig struct {
 }
 
 // SubjectConfigInterface defines the common interface for both config types
+// used
 type SubjectConfigInterface interface {
 	GetName() string
 }
@@ -61,27 +65,16 @@ type Response struct {
 	StatusCode   int    `json:"http_status"`
 }
 
-// SchemaRegistryResponse is an alias for Response to maintain compatibility with existing code
-type SchemaRegistryResponse Response
-
-// PayloadTestResponse is used in test files to parse validation responses
-type PayloadTestResponse struct {
-	IsCompatible bool   `json:"is_compatible"`
-	HttpStatus   int    `json:"http_status"`
-	ErrorCode    string `json:"error_code"`
-	Message      string `json:"message"`
-}
-
 // SetDefaultNone sets "None" for any unpopulated string fields in the SubjectConfig
 func (sc *SubjectConfig) SetDefaultNone() {
-	if sc.Name == "" {
-		sc.Name = "None"
-	}
 	if sc.Alias == "" {
 		sc.Alias = "None"
 	}
 	if sc.CompatibilityLevel == "" {
-		sc.CompatibilityLevel = "None"
+		sc.CompatibilityLevel = "None set"
+	}
+	if sc.CompatibilityGroup == "" {
+		sc.CompatibilityGroup = "None set"
 	}
 }
 
@@ -90,9 +83,9 @@ func (sc *GlobalConfig) SetDefaultNone() {
 		sc.Alias = "None"
 	}
 	if sc.CompatibilityLevel == "" {
-		sc.CompatibilityLevel = "None"
+		sc.CompatibilityLevel = "None set"
 	}
 	if sc.CompatibilityGroup == "" {
-		sc.CompatibilityGroup = "None"
+		sc.CompatibilityGroup = "None set"
 	}
 }

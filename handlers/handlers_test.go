@@ -3,20 +3,18 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"kafka-board/helpers"
 	"kafka-board/types"
 )
 
 func TestHandleValidatePayload(t *testing.T) {
 	// Set up logger for testing
+	t.Parallel()
 	var logBuffer bytes.Buffer
 	testLogger := slog.New(slog.NewTextHandler(&logBuffer, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -40,124 +38,7 @@ func TestHandleValidatePayload(t *testing.T) {
 			}`,
 	}
 
-	// Create validator and mock API
-	// validator := &mockSchemaValidator{mockSchema: mockSchema}
-	mockAPIInstance := &mockRegistryAPI{mockSchema: mockSchema}
-
-	// Custom function to replace HandleValidatePayload for testing
-	testHandleValidatePayload := func(w http.ResponseWriter, r *http.Request) {
-		// Extract the id from the query parameters
-		id := r.URL.Query().Get("id")
-
-		// Read and validate request body
-		body, err := io.ReadAll(r.Body)
-		if helpers.CheckErr(err) {
-			response := helpers.CreateResponseObject(
-				&falseVal,
-				fmt.Sprintf("Error reading request body: %v", err),
-				http.StatusBadRequest,
-				0,
-			)
-			helpers.SendJSONResponse(w, http.StatusBadRequest, response)
-			return
-		}
-
-		// Parse the JSON request body
-		var unmarshalledBody map[string]any
-		err = json.Unmarshal(body, &unmarshalledBody)
-		if helpers.CheckErr(err) {
-			response := helpers.CreateResponseObject(
-				&falseVal,
-				fmt.Sprintf("Invalid JSON format in request body: %v", err),
-				http.StatusBadRequest,
-				0,
-			)
-			helpers.SendJSONResponse(w, http.StatusBadRequest, response)
-			return
-		}
-
-		// Ensure payload key exists
-		payloadRaw, ok := unmarshalledBody["payload"]
-		if !ok {
-			response := helpers.CreateResponseObject(
-				&falseVal,
-				"payload key expected in request body",
-				http.StatusBadRequest,
-				0,
-			)
-			helpers.SendJSONResponse(w, http.StatusBadRequest, response)
-			return
-		}
-
-		// Process the payload based on its type
-		var payload interface{}
-
-		// Case 1: Payload is a string (need to parse as JSON)
-		payloadStr, isString := payloadRaw.(string)
-		if isString {
-			err = json.Unmarshal([]byte(payloadStr), &payload)
-			if helpers.CheckErr(err) {
-				response := helpers.CreateResponseObject(
-					&falseVal,
-					fmt.Sprintf("value of payload key is not valid JSON: %v", err),
-					http.StatusBadRequest,
-					0,
-				)
-				helpers.SendJSONResponse(w, http.StatusBadRequest, response)
-				return
-			}
-		} else {
-			// Case 2: Payload is already a JSON object
-			payload = payloadRaw
-		}
-
-		// Get the schema (using our mock)
-		schema, err := mockAPIInstance.GetSchema(id)
-		if helpers.CheckErr(err) {
-			response := helpers.CreateResponseObject(
-				&falseVal,
-				fmt.Sprintf("Error retrieving schema: %v", err),
-				http.StatusInternalServerError,
-				0,
-			)
-			helpers.SendJSONResponse(w, http.StatusInternalServerError, response)
-			return
-		}
-
-		// Use the real helper function for validation directly
-		isValid, errors, err := helpers.ValidatePayload(payload, schema)
-		if err != nil {
-			response := helpers.CreateResponseObject(
-				&falseVal,
-				fmt.Sprintf("Error validating payload: %v", err),
-				http.StatusInternalServerError,
-				0,
-			)
-			helpers.SendJSONResponse(w, http.StatusInternalServerError, response)
-			return
-		}
-
-		// Create response based on validation result
-		var response types.Response
-		if !isValid {
-			response = helpers.CreateResponseObject(
-				&falseVal,
-				strings.Join(errors, "; "),
-				http.StatusOK,
-				0,
-			)
-		} else {
-			response = helpers.CreateResponseObject(
-				&trueVal,
-				"Payload validates against schema",
-				http.StatusOK,
-				0,
-			)
-		}
-
-		testLogger.Debug("Validation result", "valid", isValid, "errors", errors)
-		helpers.SendJSONResponse(w, response.StatusCode, response)
-	}
+	testHandler := ReturnHandler(testLogger, &mockRegistryAPI{mockSchema: mockSchema})
 
 	tests := []struct {
 		name               string
@@ -238,7 +119,7 @@ func TestHandleValidatePayload(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			// Execute our test handler function instead of the real one
-			testHandleValidatePayload(rr, req)
+			testHandler.HandleValidatePayload(rr, req)
 
 			// Check status code
 			if status := rr.Code; status != test.expectedStatusCode {

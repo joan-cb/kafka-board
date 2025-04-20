@@ -652,10 +652,14 @@ var homeTemplate string = `<!DOCTYPE html>
             <div class="property-value">
                 {{if eq .GlobalConfig.CompatibilityLevel "BACKWARD"}}
                     <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                {{else if eq .GlobalConfig.CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                    <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FORWARD"}}
                     <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FULL"}}
                     <span class="icon-badge icon-badge-full">🔄 Full</span>
+                {{else if eq .GlobalConfig.CompatibilityLevel "NONE"}}
+                    <span class="icon-badge icon-badge-none">🚫 None</span>
                 {{else}}
                     <span class="icon-badge icon-badge-none">❓ {{.GlobalConfig.CompatibilityLevel}}</span>
                 {{end}}
@@ -677,7 +681,7 @@ var homeTemplate string = `<!DOCTYPE html>
                 <span class="subject-emoji"></span>
                 {{.GetName}}
             </div>
-            {{if eq (printf "%T" .) "main.SubjectConfig"}}
+            {{if eq (printf "%T" .) "types.SubjectConfig"}}
             <div class="property">
                 <span class="property-label">Normalize:</span>
                 <div class="property-value">
@@ -697,10 +701,14 @@ var homeTemplate string = `<!DOCTYPE html>
                 <div class="property-value">
                     {{if eq .CompatibilityLevel "BACKWARD"}}
                         <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                    {{else if eq .CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
                     {{else if eq .CompatibilityLevel "FORWARD"}}
                         <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                     {{else if eq .CompatibilityLevel "FULL"}}
                         <span class="icon-badge icon-badge-full">🔄 Full</span>
+                    {{else if eq .CompatibilityLevel "NONE"}}
+                        <span class="icon-badge icon-badge-none">🚫 None</span>
                     {{else}}
                         <span class="icon-badge icon-badge-none">❓ {{.CompatibilityLevel}}</span>
                     {{end}}
@@ -717,6 +725,38 @@ var homeTemplate string = `<!DOCTYPE html>
                 <span class="property-label">Status:</span>
                 <div class="property-value">
                     <span class="icon-badge icon-badge-none">⚠️ Using Global Default</span>
+                </div>
+            </div>
+            <div class="property">
+                <span class="property-label">Global Compatibility Level:</span>
+                <div class="property-value">
+                    {{if eq $.GlobalConfig.CompatibilityLevel "BACKWARD"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "FORWARD"}}
+                        <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "FULL"}}
+                        <span class="icon-badge icon-badge-full">🔄 Full</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "NONE"}}
+                        <span class="icon-badge icon-badge-none">🚫 None</span>
+                    {{else}}
+                        <span class="icon-badge icon-badge-none">❓ {{$.GlobalConfig.CompatibilityLevel}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="property">
+                <span class="property-label">Global Normalize:</span>
+                <div class="property-value">
+                    {{with $.GlobalConfig.Normalize}}
+                        {{if .}}
+                            <span class="icon-badge icon-badge-true">✅ True</span>
+                        {{else}}
+                            <span class="icon-badge icon-badge-false">❌ False</span>
+                        {{end}}
+                    {{else}}
+                        <span class="icon-badge icon-badge-none">⚠️ Not Set</span>
+                    {{end}}
                 </div>
             </div>
             {{end}}

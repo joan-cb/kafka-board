@@ -53,6 +53,7 @@ func (h *handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := template.Must(template.New("home").Parse(homeTemplate))
+
 	data := struct {
 		Configs      []types.SubjectConfigInterface
 		GlobalConfig types.GlobalConfig

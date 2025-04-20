@@ -68,12 +68,12 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 	for _, subjectName := range subjectNames {
 		// Create request with URL-encoded subject name
 		url := baseRegistryURL + "/config/" + subjectName
-		r.logger.Debug("Requesting URL",
+		r.logger.Debug("ReturnSubjectConfigs - Requesting URL",
 			"url", url)
 
 		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			r.logger.Debug("Error creating request",
+		if helpers.CheckErr(err) {
+			r.logger.Debug("ReturnSubjectConfigs - Error creating request",
 				"error", err)
 
 			return nil, fmt.Errorf("error creating request: %v", err)
@@ -84,8 +84,8 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		// Send request
 		resp, err := client.Do(req)
-		if err != nil {
-			r.logger.Debug("Error making request",
+		if helpers.CheckErr(err) {
+			r.logger.Debug("ReturnSubjectConfigs - Error making request",
 				"error", err)
 
 			return nil, fmt.Errorf("error making request: %v", err)
@@ -94,7 +94,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		// Check status code
 		if resp.StatusCode == http.StatusNotFound {
-			r.logger.Debug("Subject config not found",
+			r.logger.Debug("ReturnSubjectConfigs - Subject config not found",
 				"subject", subjectName)
 
 			config := types.SubjectGlobalConfig{
@@ -109,7 +109,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			r.logger.Debug("Unexpected status code",
+			r.logger.Debug("ReturnSubjectConfigs - Unexpected status code",
 				"status", resp.StatusCode,
 				"body", string(body))
 
@@ -118,8 +118,8 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		// Read response body
 		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			r.logger.Debug("Error reading response",
+		if helpers.CheckErr(err) {
+			r.logger.Debug("ReturnSubjectConfigs - Error reading response",
 				"error", err)
 
 			return nil, fmt.Errorf("error reading response: %v", err)
@@ -129,20 +129,20 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 		config := types.SubjectConfig{
 			Name: subjectName,
 		}
-		if err := json.Unmarshal(body, &config); err != nil {
-			r.logger.Debug("Error parsing JSON",
+		if helpers.CheckErr(json.Unmarshal(body, &config)) {
+			r.logger.Debug("ReturnSubjectConfigs - Error parsing JSON",
 				"error", err)
 
 			return nil, fmt.Errorf("error parsing JSON: %v", err)
 		}
 		config.SetDefaultNone()
-		r.logger.Debug("Config returned by returnSubjectConfigs for subject",
+		r.logger.Debug("ReturnSubjectConfigs - Config returned by returnSubjectConfigs for subject",
 			"subject", subjectName)
 
 		configs = append(configs, config)
 	}
 
-	r.logger.Debug("Configs returned by returnSubjectConfigs",
+	r.logger.Debug("ReturnSubjectConfigs - Configs returned by returnSubjectConfigs",
 		"configs", configs)
 
 	return configs, nil
@@ -152,47 +152,61 @@ func (r *RegistryAPI) GetGlobalConfig() (types.GlobalConfig, error) {
 	client := &http.Client{}
 	url := baseRegistryURL + "/config"
 	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Println(err)
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetGlobalConfig -Error creating request",
+			"error", err)
+
 		return types.GlobalConfig{}, fmt.Errorf("error creating request: %v", err)
 	}
 
 	//Preparing Request
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
 	resp, err := client.Do(req)
-	if err != nil {
-		log.Println(err)
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetGlobalConfig - Error making request",
+			"error", err)
+
 		return types.GlobalConfig{}, fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	//Checking Status Code
 	if resp.StatusCode != http.StatusOK {
+		r.logger.Debug("GetGlobalConfig - Unexpected status code",
+			"status", resp.StatusCode)
+
 		return types.GlobalConfig{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	//Reading Response Body
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetGlobalConfig - Error reading response",
+			"error", err)
+
 		return types.GlobalConfig{}, fmt.Errorf("error reading response: %v", err)
 	}
 
 	//Parsing JSON Response
-	config := types.GlobalConfig{
+	globalConfig := types.GlobalConfig{
 		Name: "Global Config",
 	}
 
 	//Setting Default Values
-	config.SetDefaultNone()
+	globalConfig.SetDefaultNone()
 
 	//Unmarshalling JSON Response
-	if err := json.Unmarshal(body, &config); err != nil {
-		log.Println(err)
+	if helpers.CheckErr(json.Unmarshal(body, &globalConfig)) {
+		r.logger.Debug("GetGlobalConfig - Error parsing JSON",
+			"error", err)
+
 		return types.GlobalConfig{}, fmt.Errorf("error parsing JSON: %v", err)
 	}
-	log.Printf("Global Config returned by getGlobalConfig: %v", config)
-	return config, nil
+	r.logger.Debug("GetGlobalConfig - Global Config returned by getGlobalConfig",
+		"config", globalConfig)
+
+	return globalConfig, nil
 }
 
 func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {

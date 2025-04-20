@@ -607,204 +607,7 @@
         .left-button, .right-button {
             margin-bottom: 15px;
         }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-            margin: 20px auto;
-            display: none;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .button-with-spinner {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .button-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 8px;
-            display: none;
-        }
-
-        .copy-button {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            opacity: 0.7;
-        }
-        
-        .copy-button:hover {
-            opacity: 1;
-            transform: translateY(-2px);
-        }
-        
-        .schema-content {
-            position: relative;
-        }
-        
-        .copy-success {
-            background: #e3f2fd;
-            color: #2196f3;
-        }
-
-        .result-container {
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden;
-            border: none;
-        }
-        
-        .result-title {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            padding: 12px 15px;
-            margin: -20px -20px 15px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .result-item {
-            margin: 15px 0;
-            transition: opacity 0.3s;
-        }
-        
-        .expandable-message {
-            max-height: 100px;
-            overflow-y: auto;
-            position: relative;
-            padding-right: 25px;
-        }
-        
-        .expand-button {
-            position: absolute;
-            right: 0;
-            top: 0;
-            background: none;
-            border: none;
-            color: var(--primary-color);
-            cursor: pointer;
-            padding: 2px 5px;
-            font-size: 10px;
-            box-shadow: none;
-        }
-
-        /* Custom styles for highlighted code */
-        pre code.hljs {
-            padding: 0;
-            background: transparent;
-            border-radius: 4px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .schema-content pre, .json-display pre {
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* Style for JSON editor with highlighting */
-        .json-editor-container {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        .json-editor-container textarea {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            padding: 10px;
-            width: 100%;
-            min-height: 200px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            resize: vertical;
-            tab-size: 2;
-        }
-        
-        .json-preview {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            overflow: auto;
-            pointer-events: none;
-            padding: 10px;
-            color: transparent;
-            background: transparent;
-        }
-        
-        .json-preview .hljs {
-            background: transparent;
-            color: transparent;
-        }
-        
-        .json-preview .hljs-attr {
-            color: #0d904f;
-        }
-        
-        .json-preview .hljs-string {
-            color: #d73a49;
-        }
-        
-        .json-preview .hljs-number {
-            color: #005cc5;
-        }
-        
-        .json-preview .hljs-literal {
-            color: #6f42c1;
-        }
-        
-        .json-preview .hljs-punctuation {
-            color: #24292e;
-        }
-        
-        .json-format-button {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            opacity: 0.7;
-            z-index: 10;
-        }
-        
-        .json-format-button:hover {
-            opacity: 1;
-            transform: translateY(-2px);
-        }
     </style>
-    <!-- Add highlight.js for JSON syntax highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-light.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/json.min.js"></script>
 </head>
 <body>
     <div class="header-container">
@@ -847,10 +650,14 @@
             <div class="property-value">
                 {{if eq .GlobalConfig.CompatibilityLevel "BACKWARD"}}
                     <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                {{else if eq .GlobalConfig.CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                    <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FORWARD"}}
                     <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                 {{else if eq .GlobalConfig.CompatibilityLevel "FULL"}}
                     <span class="icon-badge icon-badge-full">🔄 Full</span>
+                {{else if eq .GlobalConfig.CompatibilityLevel "NONE"}}
+                    <span class="icon-badge icon-badge-none">🚫 None</span>
                 {{else}}
                     <span class="icon-badge icon-badge-none">❓ {{.GlobalConfig.CompatibilityLevel}}</span>
                 {{end}}
@@ -872,7 +679,7 @@
                 <span class="subject-emoji"></span>
                 {{.GetName}}
             </div>
-            {{if eq (printf "%T" .) "main.SubjectConfig"}}
+            {{if eq (printf "%T" .) "types.SubjectConfig"}}
             <div class="property">
                 <span class="property-label">Normalize:</span>
                 <div class="property-value">
@@ -892,10 +699,14 @@
                 <div class="property-value">
                     {{if eq .CompatibilityLevel "BACKWARD"}}
                         <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                    {{else if eq .CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
                     {{else if eq .CompatibilityLevel "FORWARD"}}
                         <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
                     {{else if eq .CompatibilityLevel "FULL"}}
                         <span class="icon-badge icon-badge-full">🔄 Full</span>
+                    {{else if eq .CompatibilityLevel "NONE"}}
+                        <span class="icon-badge icon-badge-none">🚫 None</span>
                     {{else}}
                         <span class="icon-badge icon-badge-none">❓ {{.CompatibilityLevel}}</span>
                     {{end}}
@@ -912,6 +723,38 @@
                 <span class="property-label">Status:</span>
                 <div class="property-value">
                     <span class="icon-badge icon-badge-none">⚠️ Using Global Default</span>
+                </div>
+            </div>
+            <div class="property">
+                <span class="property-label">Global Compatibility Level:</span>
+                <div class="property-value">
+                    {{if eq $.GlobalConfig.CompatibilityLevel "BACKWARD"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "BACKWARD_TRANSITIVE"}}
+                        <span class="icon-badge icon-badge-backward">⏮️ Backward Transitive</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "FORWARD"}}
+                        <span class="icon-badge icon-badge-forward">⏭️ Forward</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "FULL"}}
+                        <span class="icon-badge icon-badge-full">🔄 Full</span>
+                    {{else if eq $.GlobalConfig.CompatibilityLevel "NONE"}}
+                        <span class="icon-badge icon-badge-none">🚫 None</span>
+                    {{else}}
+                        <span class="icon-badge icon-badge-none">❓ {{$.GlobalConfig.CompatibilityLevel}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="property">
+                <span class="property-label">Global Normalize:</span>
+                <div class="property-value">
+                    {{with $.GlobalConfig.Normalize}}
+                        {{if .}}
+                            <span class="icon-badge icon-badge-true">✅ True</span>
+                        {{else}}
+                            <span class="icon-badge icon-badge-false">❌ False</span>
+                        {{end}}
+                    {{else}}
+                        <span class="icon-badge icon-badge-none">⚠️ Not Set</span>
+                    {{end}}
                 </div>
             </div>
             {{end}}
@@ -1016,298 +859,6 @@
                     emojiSpan.textContent = getRandomEmoji();
                 }
             });
-        });
-
-        // 1. Add a loading spinner component
-        function addLoadingSpinner() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .spinner {
-                    width: 40px;
-                    height: 40px;
-                    border: 4px solid rgba(0, 0, 0, 0.1);
-                    border-radius: 50%;
-                    border-top-color: var(--primary-color);
-                    animation: spin 1s ease-in-out infinite;
-                    margin: 20px auto;
-                    display: none;
-                }
-                
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-                
-                .button-with-spinner {
-                    position: relative;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                .button-spinner {
-                    width: 16px;
-                    height: 16px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                    border-radius: 50%;
-                    border-top-color: white;
-                    animation: spin 1s ease-in-out infinite;
-                    margin-left: 8px;
-                    display: none;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Add spinner div to results container
-            const resultContainer = document.getElementById('resultContainer');
-            const spinner = document.createElement('div');
-            spinner.className = 'spinner';
-            spinner.id = 'resultsSpinner';
-            resultContainer.prepend(spinner);
-            
-            // Add spinners to buttons
-            const buttons = document.querySelectorAll('.submit-button');
-            buttons.forEach(button => {
-                const span = document.createElement('span');
-                span.className = 'button-spinner';
-                button.appendChild(span);
-                button.classList.add('button-with-spinner');
-            });
-        }
-
-        // 2. Add copy buttons for JSON content
-        function addCopyButtons() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .copy-button {
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
-                    background: var(--primary-light);
-                    color: var(--primary-dark);
-                    border: none;
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    opacity: 0.7;
-                }
-                
-                .copy-button:hover {
-                    opacity: 1;
-                    transform: translateY(-2px);
-                }
-                
-                .schema-content {
-                    position: relative;
-                }
-                
-                .copy-success {
-                    background: #e3f2fd;
-                    color: #2196f3;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Add copy button to schema
-            const schemaContent = document.querySelector('.schema-content');
-            if (schemaContent) {
-                const button = document.createElement('button');
-                button.className = 'copy-button';
-                button.textContent = 'Copy';
-                button.onclick = function() {
-                    const text = schemaContent.querySelector('pre').textContent;
-                    navigator.clipboard.writeText(text).then(() => {
-                        button.textContent = 'Copied!';
-                        button.classList.add('copy-success');
-                        setTimeout(() => {
-                            button.textContent = 'Copy';
-                            button.classList.remove('copy-success');
-                        }, 2000);
-                    });
-                };
-                schemaContent.appendChild(button);
-            }
-            
-            // Add copy button to JSON input
-            const textareaContainer = document.querySelector('.test-form');
-            const textarea = document.getElementById('testJson');
-            if (textarea && textareaContainer) {
-                const wrapper = document.createElement('div');
-                wrapper.style.position = 'relative';
-                wrapper.style.marginBottom = '15px';
-                
-                // Replace textarea with wrapped version
-                textarea.parentNode.insertBefore(wrapper, textarea);
-                wrapper.appendChild(textarea);
-                
-                const button = document.createElement('button');
-                button.className = 'copy-button';
-                button.style.top = '40px'; // Position below label
-                button.textContent = 'Copy';
-                button.onclick = function() {
-                    textarea.select();
-                    navigator.clipboard.writeText(textarea.value).then(() => {
-                        button.textContent = 'Copied!';
-                        button.classList.add('copy-success');
-                        setTimeout(() => {
-                            button.textContent = 'Copy';
-                            button.classList.remove('copy-success');
-                        }, 2000);
-                    });
-                };
-                wrapper.appendChild(button);
-            }
-        }
-
-        // 3. Improved testPayload function with loading indicators
-        function testPayload() {
-            const testJsonText = document.getElementById('testJson').value;
-            const id = "{{.SchemaID}}";
-            
-            // Show loading indicators
-            const testButton = document.getElementById('testButton2');
-            const spinner = testButton.querySelector('.button-spinner');
-            spinner.style.display = 'inline-block';
-            testButton.disabled = true;
-            
-            // Show the main spinner
-            const resultsSpinner = document.getElementById('resultsSpinner');
-            if (resultsSpinner) resultsSpinner.style.display = 'block';
-            
-            // Hide previous results
-            const resultElems = document.querySelectorAll('#resultContainer .result-item');
-            resultElems.forEach(elem => elem.style.opacity = '0.5');
-
-            fetch('/test-payload?id=' + encodeURIComponent(id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    payload: testJsonText
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Reset loading state
-                spinner.style.display = 'none';
-                testButton.disabled = false;
-                if (resultsSpinner) resultsSpinner.style.display = 'none';
-                resultElems.forEach(elem => elem.style.opacity = '1');
-                
-                displayValidationResult(data);
-            })
-            .catch(error => {
-                // Reset loading state
-                spinner.style.display = 'none';
-                testButton.disabled = false;
-                if (resultsSpinner) resultsSpinner.style.display = 'none';
-                resultElems.forEach(elem => elem.style.opacity = '1');
-                
-                // Show error in results
-                displayValidationResult({
-                    is_compatible: false,
-                    http_status: 500,
-                    message: "Network error: " + error.message
-                });
-            });
-        }
-
-        // 4. Improved styles for results
-        function enhanceResultsDisplay() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .result-container {
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                    overflow: hidden;
-                    border: none;
-                }
-                
-                .result-title {
-                    background: var(--primary-light);
-                    color: var(--primary-dark);
-                    padding: 12px 15px;
-                    margin: -20px -20px 15px;
-                    border-bottom: 1px solid rgba(0,0,0,0.1);
-                }
-                
-                .result-item {
-                    margin: 15px 0;
-                    transition: opacity 0.3s;
-                }
-                
-                .expandable-message {
-                    max-height: 100px;
-                    overflow-y: auto;
-                    position: relative;
-                    padding-right: 25px;
-                }
-                
-                .expand-button {
-                    position: absolute;
-                    right: 0;
-                    top: 0;
-                    background: none;
-                    border: none;
-                    color: var(--primary-color);
-                    cursor: pointer;
-                    padding: 2px 5px;
-                    font-size: 10px;
-                    box-shadow: none;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Make message expandable if it's long
-            const messageResult = document.getElementById('messageResult');
-            if (messageResult) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'expandable-message';
-                
-                // Get the inner content
-                const badge = messageResult.querySelector('.icon-badge');
-                if (badge) {
-                    const originalText = badge.textContent;
-                    if (originalText && originalText.length > 100) {
-                        const expandButton = document.createElement('button');
-                        expandButton.className = 'expand-button';
-                        expandButton.textContent = '⤢';
-                        expandButton.title = 'Expand message';
-                        expandButton.onclick = function() {
-                            if (wrapper.style.maxHeight === 'none') {
-                                wrapper.style.maxHeight = '100px';
-                                expandButton.textContent = '⤢';
-                                expandButton.title = 'Expand message';
-                            } else {
-                                wrapper.style.maxHeight = 'none';
-                                expandButton.textContent = '⤡';
-                                expandButton.title = 'Collapse message';
-                            }
-                        };
-                        wrapper.appendChild(expandButton);
-                    }
-                }
-                
-                // Move badge into wrapper
-                if (badge) wrapper.appendChild(badge);
-                messageResult.appendChild(wrapper);
-            }
-        }
-
-        // Initialize enhancements
-        document.addEventListener('DOMContentLoaded', function() {
-            addLoadingSpinner();
-            addCopyButtons();
-            enhanceResultsDisplay();
-            
-            // Update event listeners to use enhanced functions
-            const testButton2 = document.getElementById('testButton2');
-            if (testButton2) {
-                testButton2.removeEventListener('click', window.testPayload);
-                testButton2.addEventListener('click', testPayload);
-            }
         });
     </script>
 </body>
