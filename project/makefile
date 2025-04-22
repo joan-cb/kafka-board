@@ -42,4 +42,14 @@ up_build: down build
 	docker compose up --build -d
 	@echo "Docker images built and started!"
 
- 
+ ## Run tests in short mode
+test-short:
+	@echo "Running tests in short mode..."
+	cd ../ && go test -short ./...
+	@echo "Short tests complete!"
+
+## Run all tests
+test:
+	@echo "Running all tests..."
+	cd ../ && go test -v ./...
+	@echo "All tests complete!"

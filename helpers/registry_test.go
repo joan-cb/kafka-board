@@ -123,7 +123,7 @@ func TestTransformJSONToSchemaFormat(t *testing.T) {
 			name:        "empty string",
 			input:       "",
 			wantErr:     true,
-			expectedErr: "invalid JSON input",
+			expectedErr: "empty JSON is not allowed",
 		},
 		{
 			name:        "empty JSON object",

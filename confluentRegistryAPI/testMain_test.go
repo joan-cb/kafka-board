@@ -1,67 +1,74 @@
 package confluentRegistryAPI
 
-// import (
-// 	"log/slog"
-// 	"net/http"
-// 	"os"
-// 	"testing"
-// 	"time"
-// )
+import (
+	"flag"
+	"fmt"
+	"log/slog"
+	"os"
+	"testing"
+)
 
-// // TestMain controls the entire test execution
-// func TestMain(m *testing.M) {
-// 	// Only set up integration test resources if not in short mode
-// 	if !testing.Short() {
-// 		setupIntegrationTests()
-// 		defer teardownIntegrationTests()
-// 	}
+//to do: create testStruct for test cases and not resuse registryAPI struct
 
-// 	// Run all tests and exit
-// 	os.Exit(m.Run())
-// }
+func TestMain(m *testing.M) {
+	// Set up logger with debug level
+	logHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	testLogger := slog.New(logHandler)
+	slog.SetDefault(testLogger)
 
-// // setupIntegrationTests prepares the integration test environment
-// func setupIntegrationTests() {
-// 	// Read server URL from environment variable, with fallback
-// 	serverURL := os.Getenv("SCHEMA_REGISTRY_URL")
-// 	if serverURL == "" {
-// 		serverURL = "http://schema-registry:8081" // Default for local development
-// 	}
+	// Set up environment for testing - use localhost when running tests
+	if os.Getenv("SCHEMA_REGISTRY_URL") == "" {
+		os.Setenv("SCHEMA_REGISTRY_URL", "http://localhost:8090")
+		testLogger.Info("Setting Schema Registry URL for tests",
+			"url", os.Getenv("SCHEMA_REGISTRY_URL"))
+	}
 
-// 	// Override the global baseRegistryURL
-// 	baseRegistryURL = serverURL
+	flag.Parse()
+	if testing.Short() {
+		fmt.Println("Skipping integration tests in short mode")
+		os.Exit(0)
+	}
+	// 1. Setup
+	registryAPI := ReturnRegistryAPI(testLogger)
 
-// 	// Initialize logger for tests
-// 	logggerHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-// 		Level: slog.LevelDebug,
-// 	})
-// 	logger = slog.New(logggerHandler)
+	subjectNames, err := registryAPI.ReturnSubjects()
 
-// 	// Wait for server to be available
-// 	waitForServer(baseRegistryURL, 30*time.Second)
+	if err != nil {
+		slog.Error("Error getting subjects",
+			"error", err)
+		os.Exit(1)
+	}
+	slog.Debug("TestMain - Subjects returned",
+		"subjects", subjectNames)
+	// Delete all subjects
+	deletedSubjects, err := registryAPI.deleteAllSubjects(subjectNames)
+	slog.Debug("TestMain - Deleted subjects",
+		"subjects", deletedSubjects)
+	if err != nil {
+		slog.Error("Error deleting test subject",
+			"error", err)
+		os.Exit(1)
+	}
+	// Create test subjects
+	err = registryAPI.createTestSubject(newSubjects)
+	if err != nil {
+		slog.Error("Error creating test subject",
+			"error", err)
+		os.Exit(1)
+	}
 
-// 	// Optional: Set up test data if needed
-// 	setupTestData()
-// }
+	// prepareTestEnvironment()
 
-// // teardownIntegrationTests cleans up after integration tests
-// func teardownIntegrationTests() {
-// 	// Clean up test data if needed
-// 	cleanupTestData()
-// }
+	// 2. Run tests
+	code := m.Run()
+	slog.Debug("TestMain - Test results",
+		"code", code)
 
-// // waitForServer attempts to connect to the server until it's available or timeout
-// func waitForServer(url string, timeout time.Duration) {
-// 	deadline := time.Now().Add(timeout)
-// 	for time.Now().Before(deadline) {
-// 		resp, err := http.Get(url + "/subjects")
-// 		if err == nil {
-// 			resp.Body.Close()
-// 			if resp.StatusCode == http.StatusOK {
-// 				return
-// 			}
-// 		}
-// 		time.Sleep(1 * time.Second)
-// 	}
-// 	panic("Schema Registry server not available within timeout")
-// }
+	// 3. Teardown
+	// cleanupTestEnvironment()
+
+	// 4. Exit with the test result code
+	os.Exit(code)
+}
