@@ -13,9 +13,9 @@ import (
 // Registry API configuration
 var (
 	// GetRegistryURL returns the base URL for the Schema Registry API
-	// It reads from the REGISTRY_URL environment variable or uses the default
+	// It reads from the SCHEMA_REGISTRY_URL environment variable or uses the default
 	registryURL = func() string {
-		if url := os.Getenv("REGISTRY_URL"); url != "" {
+		if url := os.Getenv("SCHEMA_REGISTRY_URL"); url != "" {
 			return url
 		}
 		return "http://schema-registry:8081"

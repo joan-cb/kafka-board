@@ -3,6 +3,7 @@ package confluentRegistryAPI
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func (r *RegistryAPI) deleteDefaultConfig() error {
@@ -13,7 +14,15 @@ func (r *RegistryAPI) deleteDefaultConfig() error {
 
 func (r *RegistryAPI) deleteAllSubjects(subjectNames []string) (string, error) {
 	client := &http.Client{}
-	baseURL := "http://localhost:8090/subjects"
+
+	// Use the environment variable for Schema Registry URL
+	registryURL := os.Getenv("SCHEMA_REGISTRY_URL")
+	if registryURL == "" {
+		registryURL = "http://schema-registry:8081"
+	}
+
+	baseURL := fmt.Sprintf("%s/subjects", registryURL)
+	r.logger.Debug("DeleteAllSubjects - Using Schema Registry URL", "url", baseURL)
 
 	for _, subjectName := range subjectNames {
 		req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", baseURL, subjectName), nil)

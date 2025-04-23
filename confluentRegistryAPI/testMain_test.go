@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+// skipServerTests flag controls whether to skip tests that require a real Schema Registry server
+// Default is false, meaning we'll try to connect to a real server by default
+var skipServerTests = flag.Bool("skip-server-tests", false, "Skip tests that require a real Schema Registry server")
+
 //to do: create testStruct for test cases and not resuse registryAPI struct
 
 func TestMain(m *testing.M) {
@@ -18,18 +22,21 @@ func TestMain(m *testing.M) {
 	testLogger := slog.New(logHandler)
 	slog.SetDefault(testLogger)
 
-	// Set up environment for testing - use localhost when running tests
+	// Set up environment for testing - use schema-registry:8081 as the default URL
 	if os.Getenv("SCHEMA_REGISTRY_URL") == "" {
-		os.Setenv("SCHEMA_REGISTRY_URL", "http://localhost:8090")
+		os.Setenv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081")
 		testLogger.Info("Setting Schema Registry URL for tests",
 			"url", os.Getenv("SCHEMA_REGISTRY_URL"))
 	}
 
 	flag.Parse()
-	if testing.Short() {
-		fmt.Println("Skipping integration tests in short mode")
-		os.Exit(0)
+
+	// Check if integration tests should be skipped
+	if testing.Short() || *skipServerTests {
+		fmt.Println("Skipping integration tests that require a Schema Registry server")
+		os.Exit(m.Run()) // Run the tests that don't require a server connection
 	}
+
 	// 1. Setup
 	registryAPI := ReturnRegistryAPI(testLogger)
 

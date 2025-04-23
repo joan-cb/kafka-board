@@ -30,7 +30,11 @@ var newSubjects = []testSubject{
 
 func (r *RegistryAPI) createTestSubject(newSubjects []testSubject) error {
 	client := &http.Client{}
-	baseURL := "http://localhost:8090/subjects"
+
+	registryURL := "http://localhost:8090"
+
+	baseURL := fmt.Sprintf("%s/subjects", registryURL)
+	r.logger.Debug("CreateTestSubject - Using Schema Registry URL", "url", baseURL)
 
 	// Simple Avro schema for testing
 	for _, subjectName := range newSubjects {

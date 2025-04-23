@@ -9,9 +9,10 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
-var baseRegistryURL = "http://schema-registry:8081"
+var baseRegistryURL = os.Getenv("REGISTRY_BASE_URL")
 
 type RegistryAPI struct {
 	logger *slog.Logger

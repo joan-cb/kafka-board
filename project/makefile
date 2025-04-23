@@ -1,4 +1,3 @@
-# Variables
 SRV_BINARY=kafkaBoard
 GO_BUILD_FLAGS=GOOS=linux CGO_ENABLED=0
 
@@ -51,5 +50,5 @@ test-short:
 ## Run all tests
 test:
 	@echo "Running all tests..."
-	cd ../ && go test -v ./...
+	cd ../ && go test ./...
 	@echo "All tests complete!"

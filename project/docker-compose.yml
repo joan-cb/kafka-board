@@ -51,17 +51,18 @@ services:
       - "9080:9080"
     environment:
       - TZ=UTC
+      - REGISTRY_BASE_URL=http://schema-registry:8081
     restart: unless-stopped
     depends_on:
       schema-registry:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD", "wget", "--spider", "http://localhost:9080/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 30s
-
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.0
     ports:
