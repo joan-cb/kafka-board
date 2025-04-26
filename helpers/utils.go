@@ -15,6 +15,7 @@ func CheckErr(e error) bool {
 func ValidatePayload(payload interface{}, schema types.Schema) (bool, []string, error) {
 	schemaLoader := gojsonschema.NewStringLoader(schema.Schema)
 	documentLoader := gojsonschema.NewGoLoader(payload)
+
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
 		return false, nil, err

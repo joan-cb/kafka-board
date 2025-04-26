@@ -146,7 +146,6 @@ func TestHandleValidatePayload(t *testing.T) {
 			if !strings.Contains(response.Message, test.expectedMessage) {
 				t.Errorf("Expected message to contain '%s', got '%s'", test.expectedMessage, response.Message)
 			}
-
 			// Log for debugging
 			t.Logf("Response: %+v", response)
 			t.Logf("Logs: %s", logBuffer.String())
