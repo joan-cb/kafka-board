@@ -25,6 +25,7 @@ func (h *handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleHomePage - Error fetching subjects",
 			"error", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -36,6 +37,7 @@ func (h *handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleHomePage - Error fetching global config",
 			"error", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -47,6 +49,7 @@ func (h *handler) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleHomePage - Error fetching configs",
 			"error", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -83,6 +86,7 @@ func (h *handler) HandleSchemaPage(w http.ResponseWriter, r *http.Request) {
 	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleSchemaPage - Error fetching schemas",
 			"error", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -156,7 +160,9 @@ func (h *handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	if helpers.CheckErr(err) {
 		h.logger.Debug("HandleTestSchemaGet - Error fetching schemas",
 			"error", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -182,15 +188,20 @@ func (h *handler) HandleTestSchemaGet(w http.ResponseWriter, r *http.Request) {
 	funcMap := template.FuncMap{
 		"formatJSON": func(s string) string {
 			var result interface{}
+
 			if helpers.CheckErr(json.Unmarshal([]byte(s), &result)) {
 				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
 					"error", err)
+
 				return s
 			}
+
 			formatted, err := json.MarshalIndent(result, "", "    ")
+
 			if helpers.CheckErr(err) {
 				h.logger.Debug("HandleTestSchemaGet - Error formatting JSON",
 					"error", err)
+
 				return s
 			}
 			return string(formatted)

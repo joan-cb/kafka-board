@@ -67,7 +67,9 @@ func main() {
 
 		// Asking listener to shut down and shed load.
 		if err := server.Shutdown(ctx); err != nil {
-			logger.Error("Could not stop server gracefully", "error", err)
+			logger.Error("Could not stop server gracefully",
+				"error", err)
+
 			server.Close()
 		}
 	}
