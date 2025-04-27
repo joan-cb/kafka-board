@@ -36,10 +36,13 @@ up:
 
 
 ## up_build: stops, builds, and starts containers
-up_build: down build
+up_build: down build test-short
 	@echo "Building and starting Docker images..."
 	docker compose up --build -d
 	@echo "Docker images built and started!"
+	# @echo "Running tests integrated tests..."
+	# cd ../ && SCHEMA_REGISTRY_URL=http://localhost:8090 && go test ./...
+	# @echo "Tests complete!"
 
  ## Run tests in short mode
 test-short:

@@ -11,7 +11,15 @@ import (
 	"os"
 )
 
-var baseRegistryURL = os.Getenv("REGISTRY_BASE_URL")
+var baseRegistryURL string
+
+func init() {
+	if os.Getenv("REGISTRY_BASE_URL") == "" {
+		baseRegistryURL = "http://localhost:8090"
+	} else {
+		baseRegistryURL = os.Getenv("REGISTRY_BASE_URL")
+	}
+}
 
 type RegistryAPI struct {
 	logger *slog.Logger
@@ -170,6 +178,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 func (r *RegistryAPI) GetGlobalConfig() (types.GlobalConfig, error) {
 	client := &http.Client{}
+
 	url := baseRegistryURL + "/config"
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -233,6 +242,7 @@ func (r *RegistryAPI) GetGlobalConfig() (types.GlobalConfig, error) {
 func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {
 	var allSchemas []types.Schema
 	client := &http.Client{}
+
 	url := baseRegistryURL + "/schemas"
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -371,10 +381,9 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 }
 
 func (r *RegistryAPI) GetSchema(id string) (types.Schema, error) {
-
 	schema := types.Schema{}
-
 	client := &http.Client{}
+
 	url := baseRegistryURL + "/schemas/ids/" + id
 	req, err := http.NewRequest("GET", url, nil)
 	if helpers.CheckErr(err) {

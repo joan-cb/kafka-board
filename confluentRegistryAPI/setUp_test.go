@@ -31,15 +31,13 @@ var newSubjects = []testSubject{
 func (r *RegistryAPI) createTestSubject(newSubjects []testSubject) error {
 	client := &http.Client{}
 
-	registryURL := "http://localhost:8090"
-
-	baseURL := fmt.Sprintf("%s/subjects", registryURL)
-	r.logger.Debug("CreateTestSubject - Using Schema Registry URL", "url", baseURL)
+	requestURL := fmt.Sprintf("%s/subjects", baseRegistryURL)
+	r.logger.Debug("CreateTestSubject - Using Schema Registry URL", "url", requestURL)
 
 	// Simple Avro schema for testing
 	for _, subjectName := range newSubjects {
 		// Create request with schema in body
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s/versions", baseURL, subjectName.subjectName),
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s/versions", requestURL, subjectName.subjectName),
 			strings.NewReader(subjectName.schemaStr))
 
 		if err != nil {
