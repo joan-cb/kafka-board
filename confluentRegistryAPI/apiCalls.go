@@ -6,7 +6,6 @@ import (
 	"io"
 	"kafka-board/helpers"
 	"kafka-board/types"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -28,7 +27,7 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 
 	// Create request
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/subjects", baseRegistryURL), nil)
-	if err != nil {
+	if helpers.CheckErr(err) {
 		r.logger.Debug("ReturnSubjects - Error creating request",
 			"error", err)
 
@@ -40,7 +39,7 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 
 	// Send request
 	resp, err := client.Do(req)
-	if err != nil {
+	if helpers.CheckErr(err) {
 		r.logger.Debug("ReturnSubjects - Error making request",
 			"error", err)
 
@@ -58,7 +57,7 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if helpers.CheckErr(err) {
 		r.logger.Debug("ReturnSubjects - Error reading response",
 			"error", err)
 
@@ -90,6 +89,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 			"url", url)
 
 		req, err := http.NewRequest("GET", url, nil)
+
 		if helpers.CheckErr(err) {
 			r.logger.Debug("ReturnSubjectConfigs - Error creating request",
 				"error", err)
@@ -102,6 +102,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		// Send request
 		resp, err := client.Do(req)
+
 		if helpers.CheckErr(err) {
 			r.logger.Debug("ReturnSubjectConfigs - Error making request",
 				"error", err)
@@ -127,6 +128,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
+
 			r.logger.Debug("ReturnSubjectConfigs - Unexpected status code",
 				"status", resp.StatusCode,
 				"body", string(body))
@@ -181,6 +183,7 @@ func (r *RegistryAPI) GetGlobalConfig() (types.GlobalConfig, error) {
 	//Preparing Request
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
 	resp, err := client.Do(req)
+
 	if helpers.CheckErr(err) {
 		r.logger.Debug("GetGlobalConfig - Error making request",
 			"error", err)
@@ -232,24 +235,38 @@ func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {
 	client := &http.Client{}
 	url := baseRegistryURL + "/schemas"
 	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchemas - Error creating request",
+			"error", err)
+
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
 
 	resp, err := client.Do(req)
-	if err != nil {
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchemas - Error making request",
+			"error", err)
+
 		return nil, fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		r.logger.Debug("GetSchemas - Unexpected status code",
+			"status", resp.StatusCode)
+
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchemas - Error reading response",
+			"error", err)
+
 		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
@@ -264,6 +281,10 @@ func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {
 			filteredSchemas = append(filteredSchemas, schema)
 		}
 	}
+
+	r.logger.Debug("GetSchemas - Filtered Schemas returned by getSchemas",
+		"schemas", filteredSchemas)
+
 	return filteredSchemas, nil
 }
 
@@ -274,40 +295,54 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 	// Transform JSON to Schema Registry format
 	helper := helpers.ReturnHelpers(r.logger)
 	payload, err := helper.TransformJSONToSchemaFormat(testJSON)
-	if err != nil {
-		log.Printf("Error transforming JSON to Schema Registry format: %v", err)
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("TestSchema - Error transforming JSON to Schema Registry format",
+			"error", err)
+
 		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error transforming JSON to Schema Registry format. Invalid JSON string: %v", err), http.StatusBadRequest, http.StatusBadRequest)
+
 		return resp, err
 	}
-	log.Printf("Transformed JSON returned by transformJSONToSchemaFormat: %s", payload)
+	r.logger.Debug("TestSchema - Transformed JSON returned by transformJSONToSchemaFormat",
+		"payload", payload)
 	// Create the request
 	req, err := helpers.CreateTestSchemaRequest(subjectName, version, payload)
-	if err != nil {
-		log.Printf("Error creating request: %v", err)
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("TestSchema - Error creating request",
+			"error", err)
+
 		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error creating request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
 	// Make the request
 	resp, err := helpers.MakeHTTPRequest(req)
-	if err != nil {
-		log.Printf("Error making request: %v", err)
+	if helpers.CheckErr(err) {
+		r.logger.Debug("TestSchema - Error making request",
+			"error", err)
+
 		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error making request: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
 	// Read the response body
 	body, err := helpers.ReadResponseBody(resp)
-	if err != nil {
-		log.Printf("Error reading response: %v", err)
+	if helpers.CheckErr(err) {
+		r.logger.Debug("TestSchema - Error reading response",
+			"error", err)
+
 		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error reading response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
 
 	// Process the response
 	result, err := helper.ProcessResponse(body, resp.StatusCode)
-	if err != nil {
-		log.Printf("Error processing response: %v", err)
+	if helpers.CheckErr(err) {
+		r.logger.Debug("TestSchema - Error processing response",
+			"error", err)
+
 		resp := helpers.CreateResponseObject(nil, fmt.Sprintf("Error processing response: %v", err), http.StatusInternalServerError, http.StatusInternalServerError)
 		return resp, err
 	}
@@ -324,6 +359,9 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 
 	// Handle nil IsCompatible pointer - this means the compatibility couldn't be determined
 	if result.IsCompatible == nil {
+		r.logger.Debug("TestSchema - IsCompatible is nil",
+			"result", result)
+
 		resp := helpers.CreateResponseObject(nil, result.Message, result.StatusCode, result.ErrorCode)
 		return resp, nil
 	}
@@ -339,31 +377,49 @@ func (r *RegistryAPI) GetSchema(id string) (types.Schema, error) {
 	client := &http.Client{}
 	url := baseRegistryURL + "/schemas/ids/" + id
 	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchema - Error creating request",
+			"error", err)
+
 		return schema, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
 
 	resp, err := client.Do(req)
-	if err != nil {
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchema - Error making request",
+			"error", err)
+
 		return schema, fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		r.logger.Debug("GetSchema - Unexpected status code",
+			"status", resp.StatusCode)
+
 		return schema, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+
+	if helpers.CheckErr(err) {
+		r.logger.Debug("GetSchema - Error reading response",
+			"error", err)
+
 		return schema, fmt.Errorf("error reading response: %v", err)
 	}
 
 	if err := json.Unmarshal(body, &schema); err != nil {
+		r.logger.Debug("GetSchema - Error parsing JSON",
+			"error", err)
+
 		return schema, fmt.Errorf("error parsing JSON: %v", err)
 	}
 
-	log.Printf("Schema returned by getSchema: %v", schema)
+	r.logger.Debug("GetSchema - Schema returned by getSchema",
+		"schema", schema)
+
 	return schema, nil
 }
