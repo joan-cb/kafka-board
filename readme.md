@@ -53,7 +53,7 @@ The application is built with Go and consists of three main components:
 - Compatibility mode settings
 - Default configuration handling
 
-## Technical Stack
+## Tech Stack
 
 - Built with Go 1.24
 - Uses standard library `net/http` for web server
