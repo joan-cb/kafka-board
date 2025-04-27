@@ -8,7 +8,7 @@ import (
 	"kafka-board/types"
 )
 
-// SchemaFormat represents the structure required by the Schema Registry API
+// SchemaFormat represents the structure required by the Schema Registry API endpoint
 type SchemaFormat struct {
 	Schema     string `json:"schema"`
 	SchemaType string `json:"schemaType"`

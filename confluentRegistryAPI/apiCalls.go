@@ -29,6 +29,9 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 	// Create request
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/subjects", baseRegistryURL), nil)
 	if err != nil {
+		r.logger.Debug("ReturnSubjects - Error creating request",
+			"error", err)
+
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
@@ -38,27 +41,41 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 	// Send request
 	resp, err := client.Do(req)
 	if err != nil {
+		r.logger.Debug("ReturnSubjects - Error making request",
+			"error", err)
+
 		return nil, fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// Check status code
 	if resp.StatusCode != http.StatusOK {
+		r.logger.Debug("ReturnSubjects - Unexpected status code",
+			"status", resp.StatusCode)
+
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		r.logger.Debug("ReturnSubjects - Error reading response",
+			"error", err)
+
 		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
 	// Parse JSON response
 	var subjects []string
 	if err := json.Unmarshal(body, &subjects); err != nil {
+		r.logger.Debug("ReturnSubjects - Error parsing JSON",
+			"body", string(body),
+			"error", err)
 		return nil, fmt.Errorf("error parsing JSON: %v", err)
 	}
-	log.Printf("Subjects returned by returnSubjects: %v", subjects)
+	r.logger.Debug("ReturnSubjects - Subjects returned by returnSubjects",
+		"subjects", subjects)
+
 	return subjects, nil
 }
 

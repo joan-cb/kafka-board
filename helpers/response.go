@@ -7,8 +7,6 @@ import (
 	"kafka-board/types"
 )
 
-//TODO: add slog logging to this file
-
 // SendJSONResponse sends a JSON response
 func SendJSONResponse(w http.ResponseWriter, statusCode int, payload any) {
 	// Set content type header
