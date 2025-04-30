@@ -63,4 +63,4 @@ services:
         condition: service_healthy
     command: go test ./...
     environment:
-      - SCHEMA_REGISTRY_URL=http://schema-registry:8081 
+      - REGISTRY_BASE_URL=http://schema-registry:8081 

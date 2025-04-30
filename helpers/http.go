@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -45,25 +44,6 @@ var (
 // Returns:
 //   - *http.Request: A prepared HTTP request
 //   - error: An error if request creation fails
-func CreateTestSchemaRequest(subjectName string, version int, testJSON string) (*http.Request, error) {
-	requestURL := fmt.Sprintf("%s/compatibility/subjects/%s/versions/%d",
-		registryURL, subjectName, version)
-
-	req, err := http.NewRequest(
-		"POST",
-		requestURL,
-		bytes.NewBuffer([]byte(testJSON)),
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
-	req.Header.Set("Content-Type", "application/json")
-
-	return req, nil
-}
 
 // MakeHTTPRequest executes an HTTP request and returns the response
 // This function uses a pre-configured HTTP client with timeouts

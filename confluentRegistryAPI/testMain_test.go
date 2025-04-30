@@ -22,13 +22,6 @@ func TestMain(m *testing.M) {
 	testLogger := slog.New(logHandler)
 	slog.SetDefault(testLogger)
 
-	// Set up environment for testing - use schema-registry:8081 as the default URL
-	if os.Getenv("SCHEMA_REGISTRY_URL") == "" {
-		os.Setenv("SCHEMA_REGISTRY_URL", "http://schema-registry:8081")
-		testLogger.Info("Setting Schema Registry URL for tests",
-			"url", os.Getenv("SCHEMA_REGISTRY_URL"))
-	}
-
 	flag.Parse()
 
 	// Check if integration tests should be skipped
@@ -40,42 +33,33 @@ func TestMain(m *testing.M) {
 	// 1. Setup
 	registryAPI := ReturnRegistryAPI(testLogger)
 
-	subjectNames, err := registryAPI.ReturnSubjects()
+	// 2. Create test subjects
+	for _, testSubject := range newSubjects {
+		err := registryAPI.createTestSubject(testSubject)
 
-	if err != nil {
-		slog.Error("Error getting subjects",
-			"error", err)
-		os.Exit(1)
+		if err != nil {
+			slog.Error("TestMain - Error creating test subject",
+				"error", err)
+			os.Exit(1)
+		}
 	}
-	slog.Debug("TestMain - Subjects returned",
-		"subjects", subjectNames)
-	// Delete all subjects
-	deletedSubjects, err := registryAPI.deleteAllSubjects(subjectNames)
-	slog.Debug("TestMain - Deleted subjects",
-		"subjects", deletedSubjects)
-	if err != nil {
-		slog.Error("Error deleting test subject",
-			"error", err)
-		os.Exit(1)
+	// 3. Add config
+	for _, testSubject := range newSubjects {
+		err := registryAPI.createConfig(testSubject)
+		if err != nil {
+			slog.Error("Error creating config",
+				"error", err)
+			os.Exit(1)
+		}
 	}
-	// Create test subjects
-	err = registryAPI.createTestSubject(newSubjects)
-	if err != nil {
-		slog.Error("Error creating test subject",
-			"error", err)
-		os.Exit(1)
-	}
-
-	// prepareTestEnvironment()
-
-	// 2. Run tests
+	// 4. Run tests
 	code := m.Run()
 	slog.Debug("TestMain - Test results",
 		"code", code)
 
-	// 3. Teardown
+	// 5. Teardown
 	// cleanupTestEnvironment()
 
-	// 4. Exit with the test result code
+	// 6. Exit with the test result code
 	os.Exit(code)
 }

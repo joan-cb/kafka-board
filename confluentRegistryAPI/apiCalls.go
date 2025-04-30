@@ -11,22 +11,21 @@ import (
 	"os"
 )
 
-var baseRegistryURL string
-
-func init() {
-	if os.Getenv("REGISTRY_BASE_URL") == "" {
-		baseRegistryURL = "http://localhost:8090"
-	} else {
-		baseRegistryURL = os.Getenv("REGISTRY_BASE_URL")
-	}
+type RegistryAPI struct {
+	logger          *slog.Logger
+	baseRegistryURL string
 }
 
-type RegistryAPI struct {
-	logger *slog.Logger
+func getBaseRegistryURL() string {
+	if os.Getenv("REGISTRY_BASE_URL") == "" {
+		return "http://localhost:8090"
+
+	}
+	return os.Getenv("REGISTRY_BASE_URL")
 }
 
 func ReturnRegistryAPI(logger *slog.Logger) *RegistryAPI {
-	return &RegistryAPI{logger: logger}
+	return &RegistryAPI{logger: logger, baseRegistryURL: getBaseRegistryURL()}
 }
 
 func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
@@ -34,7 +33,7 @@ func (r *RegistryAPI) ReturnSubjects() ([]string, error) {
 	client := &http.Client{}
 
 	// Create request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/subjects", baseRegistryURL), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/subjects", r.baseRegistryURL), nil)
 	if helpers.CheckErr(err) {
 		r.logger.Debug("ReturnSubjects - Error creating request",
 			"error", err)
@@ -92,7 +91,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 
 	for _, subjectName := range subjectNames {
 		// Create request with URL-encoded subject name
-		url := baseRegistryURL + "/config/" + subjectName
+		url := r.baseRegistryURL + "/config/" + subjectName
 		r.logger.Debug("ReturnSubjectConfigs - Requesting URL",
 			"url", url)
 
@@ -179,7 +178,7 @@ func (r *RegistryAPI) ReturnSubjectConfigs(subjectNames []string) ([]types.Subje
 func (r *RegistryAPI) GetGlobalConfig() (types.GlobalConfig, error) {
 	client := &http.Client{}
 
-	url := baseRegistryURL + "/config"
+	url := r.baseRegistryURL + "/config"
 	req, err := http.NewRequest("GET", url, nil)
 
 	if helpers.CheckErr(err) {
@@ -243,7 +242,7 @@ func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {
 	var allSchemas []types.Schema
 	client := &http.Client{}
 
-	url := baseRegistryURL + "/schemas"
+	url := r.baseRegistryURL + "/schemas"
 	req, err := http.NewRequest("GET", url, nil)
 
 	if helpers.CheckErr(err) {
@@ -317,7 +316,7 @@ func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON strin
 	r.logger.Debug("TestSchema - Transformed JSON returned by transformJSONToSchemaFormat",
 		"payload", payload)
 	// Create the request
-	req, err := helpers.CreateTestSchemaRequest(subjectName, version, payload)
+	req, err := createTestSchemaRequest(subjectName, version, payload, r.baseRegistryURL)
 
 	if helpers.CheckErr(err) {
 		r.logger.Debug("TestSchema - Error creating request",
@@ -384,7 +383,7 @@ func (r *RegistryAPI) GetSchema(id string) (types.Schema, error) {
 	schema := types.Schema{}
 	client := &http.Client{}
 
-	url := baseRegistryURL + "/schemas/ids/" + id
+	url := r.baseRegistryURL + "/schemas/ids/" + id
 	req, err := http.NewRequest("GET", url, nil)
 	if helpers.CheckErr(err) {
 		r.logger.Debug("GetSchema - Error creating request",

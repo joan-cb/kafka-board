@@ -10,6 +10,10 @@ type Schema struct {
 	Schema     string `json:"schema"`
 }
 
+type ConfigPayload struct {
+	Compatibility string `json:"compatibility"`
+}
+
 // SubjectConfig is the struct for the subject config model
 type SubjectConfig struct {
 	Name               string `json:"name"`
