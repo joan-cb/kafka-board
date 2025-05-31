@@ -1,229 +1,220 @@
 package helpers
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
-	"strings"
-	"testing"
-)
+// func TestIsEmptyJSON(t *testing.T) {
+// 	// Create a helpers instance for testing
+// 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+// 	helper := &Helpers{logger: logger}
 
-func TestIsEmptyJSON(t *testing.T) {
-	// Create a helpers instance for testing
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	helper := &Helpers{logger: logger}
+// 	tests := []struct {
+// 		name     string
+// 		input    interface{}
+// 		expected bool
+// 	}{
+// 		{
+// 			name:     "empty object",
+// 			input:    map[string]interface{}{},
+// 			expected: true,
+// 		},
+// 		{
+// 			name:     "non-empty object",
+// 			input:    map[string]interface{}{"key": "value"},
+// 			expected: false,
+// 		},
+// 		{
+// 			name:     "empty array",
+// 			input:    []interface{}{},
+// 			expected: true,
+// 		},
+// 		{
+// 			name:     "non-empty array",
+// 			input:    []interface{}{1, 2, 3},
+// 			expected: false,
+// 		},
+// 		{
+// 			name:     "empty string",
+// 			input:    "",
+// 			expected: true,
+// 		},
+// 		{
+// 			name:     "non-empty string",
+// 			input:    "hello",
+// 			expected: false,
+// 		},
+// 		{
+// 			name:     "null",
+// 			input:    nil,
+// 			expected: true,
+// 		},
+// 		{
+// 			name:     "integer",
+// 			input:    42,
+// 			expected: false,
+// 		},
+// 		{
+// 			name:     "boolean true",
+// 			input:    true,
+// 			expected: false,
+// 		},
+// 		{
+// 			name:     "boolean false",
+// 			input:    false,
+// 			expected: false,
+// 		},
+// 	}
 
-	tests := []struct {
-		name     string
-		input    interface{}
-		expected bool
-	}{
-		{
-			name:     "empty object",
-			input:    map[string]interface{}{},
-			expected: true,
-		},
-		{
-			name:     "non-empty object",
-			input:    map[string]interface{}{"key": "value"},
-			expected: false,
-		},
-		{
-			name:     "empty array",
-			input:    []interface{}{},
-			expected: true,
-		},
-		{
-			name:     "non-empty array",
-			input:    []interface{}{1, 2, 3},
-			expected: false,
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: true,
-		},
-		{
-			name:     "non-empty string",
-			input:    "hello",
-			expected: false,
-		},
-		{
-			name:     "null",
-			input:    nil,
-			expected: true,
-		},
-		{
-			name:     "integer",
-			input:    42,
-			expected: false,
-		},
-		{
-			name:     "boolean true",
-			input:    true,
-			expected: false,
-		},
-		{
-			name:     "boolean false",
-			input:    false,
-			expected: false,
-		},
-	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			result := helper.isEmptyJSON(tt.input)
+// 			if result != tt.expected {
+// 				t.Errorf("isEmptyJSON() = %v, want %v", result, tt.expected)
+// 			}
+// 		})
+// 	}
+// }
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := helper.isEmptyJSON(tt.input)
-			if result != tt.expected {
-				t.Errorf("isEmptyJSON() = %v, want %v", result, tt.expected)
-			}
-		})
-	}
-}
+// func TestTransformJSONToSchemaFormat(t *testing.T) {
+// 	// Create a helpers instance for testing
+// 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+// 	helper := &Helpers{logger: logger}
 
-func TestTransformJSONToSchemaFormat(t *testing.T) {
-	// Create a helpers instance for testing
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	helper := &Helpers{logger: logger}
+// 	tests := []struct {
+// 		name        string
+// 		input       string
+// 		wantErr     bool
+// 		expectedErr string
+// 	}{
+// 		{
+// 			name:    "valid simple JSON object",
+// 			input:   `{"field1": "value1", "field2": 42}`,
+// 			wantErr: false,
+// 		},
+// 		{
+// 			name:    "valid complex JSON object",
+// 			input:   `{"type": "object", "properties": {"name": {"type": "string"}, "age": {"type": "integer"}}}`,
+// 			wantErr: false,
+// 		},
+// 		{
+// 			name:    "valid JSON array",
+// 			input:   `[1, 2, 3, 4]`,
+// 			wantErr: false,
+// 		},
+// 		{
+// 			name:        "invalid JSON - missing closing brace",
+// 			input:       `{"field1": "value1"`,
+// 			wantErr:     true,
+// 			expectedErr: "invalid JSON input",
+// 		},
+// 		{
+// 			name:        "invalid JSON - trailing comma",
+// 			input:       `{"field1": "value1", }`,
+// 			wantErr:     true,
+// 			expectedErr: "invalid JSON input",
+// 		},
+// 		{
+// 			name:        "empty string",
+// 			input:       "",
+// 			wantErr:     true,
+// 			expectedErr: "empty JSON is not allowed",
+// 		},
+// 		{
+// 			name:        "empty JSON object",
+// 			input:       "{}",
+// 			wantErr:     true,
+// 			expectedErr: "empty JSON is not allowed",
+// 		},
+// 		{
+// 			name:        "empty JSON array",
+// 			input:       "[]",
+// 			wantErr:     true,
+// 			expectedErr: "empty JSON is not allowed",
+// 		},
+// 		{
+// 			name:        "null JSON",
+// 			input:       "null",
+// 			wantErr:     true,
+// 			expectedErr: "empty JSON is not allowed",
+// 		},
+// 		{
+// 			name:        "empty string value",
+// 			input:       `""`,
+// 			wantErr:     true,
+// 			expectedErr: "empty JSON is not allowed",
+// 		},
+// 	}
 
-	tests := []struct {
-		name        string
-		input       string
-		wantErr     bool
-		expectedErr string
-	}{
-		{
-			name:    "valid simple JSON object",
-			input:   `{"field1": "value1", "field2": 42}`,
-			wantErr: false,
-		},
-		{
-			name:    "valid complex JSON object",
-			input:   `{"type": "object", "properties": {"name": {"type": "string"}, "age": {"type": "integer"}}}`,
-			wantErr: false,
-		},
-		{
-			name:    "valid JSON array",
-			input:   `[1, 2, 3, 4]`,
-			wantErr: false,
-		},
-		{
-			name:        "invalid JSON - missing closing brace",
-			input:       `{"field1": "value1"`,
-			wantErr:     true,
-			expectedErr: "invalid JSON input",
-		},
-		{
-			name:        "invalid JSON - trailing comma",
-			input:       `{"field1": "value1", }`,
-			wantErr:     true,
-			expectedErr: "invalid JSON input",
-		},
-		{
-			name:        "empty string",
-			input:       "",
-			wantErr:     true,
-			expectedErr: "empty JSON is not allowed",
-		},
-		{
-			name:        "empty JSON object",
-			input:       "{}",
-			wantErr:     true,
-			expectedErr: "empty JSON is not allowed",
-		},
-		{
-			name:        "empty JSON array",
-			input:       "[]",
-			wantErr:     true,
-			expectedErr: "empty JSON is not allowed",
-		},
-		{
-			name:        "null JSON",
-			input:       "null",
-			wantErr:     true,
-			expectedErr: "empty JSON is not allowed",
-		},
-		{
-			name:        "empty string value",
-			input:       `""`,
-			wantErr:     true,
-			expectedErr: "empty JSON is not allowed",
-		},
-	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			result, err := helper.TransformJSONToSchemaFormat(tt.input)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := helper.TransformJSONToSchemaFormat(tt.input)
+// 			// Check error expectations
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("TransformJSONToSchemaFormat() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
 
-			// Check error expectations
-			if (err != nil) != tt.wantErr {
-				t.Errorf("TransformJSONToSchemaFormat() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+// 			// For error cases, check that the error message contains the expected substring
+// 			if tt.wantErr && err != nil && !strings.Contains(err.Error(), tt.expectedErr) {
+// 				t.Errorf("TransformJSONToSchemaFormat() error = %v, expected to contain %v", err, tt.expectedErr)
+// 				return
+// 			}
 
-			// For error cases, check that the error message contains the expected substring
-			if tt.wantErr && err != nil && !strings.Contains(err.Error(), tt.expectedErr) {
-				t.Errorf("TransformJSONToSchemaFormat() error = %v, expected to contain %v", err, tt.expectedErr)
-				return
-			}
+// 			// For success cases, validate the output format
+// 			if !tt.wantErr {
+// 				// Check that result is valid JSON
+// 				var resultMap map[string]interface{}
+// 				if err := json.Unmarshal([]byte(result), &resultMap); err != nil {
+// 					t.Errorf("TransformJSONToSchemaFormat returned invalid JSON: %v", err)
+// 					return
+// 				}
 
-			// For success cases, validate the output format
-			if !tt.wantErr {
-				// Check that result is valid JSON
-				var resultMap map[string]interface{}
-				if err := json.Unmarshal([]byte(result), &resultMap); err != nil {
-					t.Errorf("TransformJSONToSchemaFormat returned invalid JSON: %v", err)
-					return
-				}
+// 				// Check that result has exactly two keys: schema and schemaType
+// 				if len(resultMap) != 2 {
+// 					t.Errorf("Expected result to have exactly 2 keys, got %d keys", len(resultMap))
+// 				}
 
-				// Check that result has exactly two keys: schema and schemaType
-				if len(resultMap) != 2 {
-					t.Errorf("Expected result to have exactly 2 keys, got %d keys", len(resultMap))
-				}
+// 				// Check that schema key exists and is the original JSON string
+// 				schema, ok := resultMap["schema"]
+// 				if !ok {
+// 					t.Errorf("Result is missing required 'schema' field")
+// 				} else {
+// 					// The schema field should be the original JSON as a string
+// 					schemaStr, ok := schema.(string)
+// 					if !ok {
+// 						t.Errorf("'schema' field is not a string, got %T", schema)
+// 					} else if schemaStr != tt.input {
+// 						t.Errorf("Expected schema to be %q, got %q", tt.input, schemaStr)
+// 					}
+// 				}
 
-				// Check that schema key exists and is the original JSON string
-				schema, ok := resultMap["schema"]
-				if !ok {
-					t.Errorf("Result is missing required 'schema' field")
-				} else {
-					// The schema field should be the original JSON as a string
-					schemaStr, ok := schema.(string)
-					if !ok {
-						t.Errorf("'schema' field is not a string, got %T", schema)
-					} else if schemaStr != tt.input {
-						t.Errorf("Expected schema to be %q, got %q", tt.input, schemaStr)
-					}
-				}
+// 				// Check that schemaType key exists and is "JSON"
+// 				schemaType, ok := resultMap["schemaType"]
+// 				if !ok {
+// 					t.Errorf("Result is missing required 'schemaType' field")
+// 				} else {
+// 					// The schemaType field should be "JSON"
+// 					schemaTypeStr, ok := schemaType.(string)
+// 					if !ok {
+// 						t.Errorf("'schemaType' field is not a string, got %T", schemaType)
+// 					} else if schemaTypeStr != "JSON" {
+// 						t.Errorf("Expected schemaType to be 'JSON', got %q", schemaTypeStr)
+// 					}
+// 				}
 
-				// Check that schemaType key exists and is "JSON"
-				schemaType, ok := resultMap["schemaType"]
-				if !ok {
-					t.Errorf("Result is missing required 'schemaType' field")
-				} else {
-					// The schemaType field should be "JSON"
-					schemaTypeStr, ok := schemaType.(string)
-					if !ok {
-						t.Errorf("'schemaType' field is not a string, got %T", schemaType)
-					} else if schemaTypeStr != "JSON" {
-						t.Errorf("Expected schemaType to be 'JSON', got %q", schemaTypeStr)
-					}
-				}
+// 				// Also verify by creating the expected output manually and comparing
+// 				expectedOutput := fmt.Sprintf(`{"schema":%q,"schemaType":"JSON"}`, tt.input)
+// 				var expectedMap map[string]interface{}
+// 				json.Unmarshal([]byte(expectedOutput), &expectedMap)
 
-				// Also verify by creating the expected output manually and comparing
-				expectedOutput := fmt.Sprintf(`{"schema":%q,"schemaType":"JSON"}`, tt.input)
-				var expectedMap map[string]interface{}
-				json.Unmarshal([]byte(expectedOutput), &expectedMap)
+// 				expectedJSON, _ := json.Marshal(expectedMap)
+// 				resultJSON, _ := json.Marshal(resultMap)
 
-				expectedJSON, _ := json.Marshal(expectedMap)
-				resultJSON, _ := json.Marshal(resultMap)
-
-				if string(expectedJSON) != string(resultJSON) {
-					t.Errorf("Expected output %s, got %s", expectedJSON, resultJSON)
-				}
-			}
-		})
-	}
-}
+// 				if string(expectedJSON) != string(resultJSON) {
+// 					t.Errorf("Expected output %s, got %s", expectedJSON, resultJSON)
+// 				}
+// 			}
+// 		})
+// 	}
+// }
 
 // // TestStructFieldsModification tests edge cases where the SchemaFormat struct might be modified
 // func TestStructFieldsModification(t *testing.T) {

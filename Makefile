@@ -2,7 +2,7 @@
 SRV_BINARY=kafkaBoard
 GO_BUILD_FLAGS=GOOS=linux CGO_ENABLED=0
 
-.PHONY: all build docker-up docker-down clean test test-docker test-script
+.PHONY: all build docker-up docker-down clean test test-docker
 
 ## Build and run the service
 all: build up
@@ -52,14 +52,6 @@ test:
 	@echo "Running all tests..."
 	go test ./...
 	@echo "All tests complete!"
-
-## Run tests using smart test script
-test-script:
-	@echo "Making test script executable..."
-	chmod +x run-tests.sh
-	@echo "Running tests using script..."
-	./run-tests.sh
-	@echo "Script-based tests complete!"
 
 ## Run tests with Docker Compose setup for Schema Registry
 test-docker:

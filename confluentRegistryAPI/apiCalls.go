@@ -300,8 +300,6 @@ func (r *RegistryAPI) GetSchemas(subjectName string) ([]types.Schema, error) {
 // transformJSONToSchemaFormat takes a JSON string and wraps it in the Schema Registry format
 func (r *RegistryAPI) TestSchema(subjectName string, version int, testJSON string) (types.Response, error) {
 
-	//validate JSON and transform to Schema Registry format
-	// Transform JSON to Schema Registry format
 	helper := helpers.ReturnHelpers(r.logger)
 	payload, err := helper.TransformJSONToSchemaFormat(testJSON)
 

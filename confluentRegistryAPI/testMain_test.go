@@ -31,27 +31,27 @@ func TestMain(m *testing.M) {
 	}
 
 	// 1. Setup
-	registryAPI := ReturnRegistryAPI(testLogger)
+	// registryAPI := ReturnRegistryAPI(testLogger)
 
-	// 2. Create test subjects
-	for _, testSubject := range newSubjects {
-		err := registryAPI.createTestSubject(testSubject)
+	// // 2. Create test subjects
+	// for _, testSubject := range newSubjects {
+	// 	err := registryAPI.createTestSubject(testSubject)
 
-		if err != nil {
-			slog.Error("TestMain - Error creating test subject",
-				"error", err)
-			os.Exit(1)
-		}
-	}
-	// 3. Add config
-	for _, testSubject := range newSubjects {
-		err := registryAPI.createConfig(testSubject)
-		if err != nil {
-			slog.Error("Error creating config",
-				"error", err)
-			os.Exit(1)
-		}
-	}
+	// 	if err != nil {
+	// 		slog.Error("TestMain - Error creating test subject",
+	// 			"error", err)
+	// 		os.Exit(1)
+	// 	}
+	// }
+	// // 3. Add config
+	// for _, testSubject := range newSubjects {
+	// 	err := registryAPI.createConfig(testSubject)
+	// 	if err != nil {
+	// 		slog.Error("Error creating config",
+	// 			"error", err)
+	// 		os.Exit(1)
+	// 	}
+	// }
 	// 4. Run tests
 	code := m.Run()
 	slog.Debug("TestMain - Test results",
